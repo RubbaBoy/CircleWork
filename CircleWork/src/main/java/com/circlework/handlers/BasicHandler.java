@@ -73,6 +73,14 @@ public abstract class BasicHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) {
         try {
+            if (exchange.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
+                exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type,Authorization");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+                exchange.sendResponseHeaders(204, -1);
+                return;
+            }
+
             var method = exchange.getRequestMethod().toUpperCase();
             var path = exchange.getRequestURI().getPath().split("/");
             var strippedPath = new String[path.length - 3];
@@ -81,8 +89,7 @@ public abstract class BasicHandler implements HttpHandler {
 
             var entryOptional = paths.entrySet().stream().filter(entry -> {
                 var entryPath = entry.getKey();
-                System.out.println(method);
-                System.out.println(entryPath.method);
+                System.out.println("requested method: " + method + " entry path: " + entryPath.method);
                 System.out.println(Arrays.toString(entryPath.path));
                 System.out.println(Arrays.toString(strippedPath));
                 System.out.println(entryPath.path.length);
@@ -93,6 +100,9 @@ public abstract class BasicHandler implements HttpHandler {
 
             if (entryOptional.isEmpty()) {
                 System.out.println("Empty!");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type,Authorization");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 setBody(exchange, Map.of("message", "ur bad"), 404);
                 return;
             }

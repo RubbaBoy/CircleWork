@@ -7,6 +7,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 public class Auth extends BasicHandler {
@@ -62,6 +63,7 @@ public class Auth extends BasicHandler {
 
         }
         catch(Exception e){
+            e.printStackTrace();
             setBody(exchange, Map.of("message", "error creating user"), 418);
         }
 
@@ -72,13 +74,149 @@ public class Auth extends BasicHandler {
     }
 
 
+    static final class LoginRequest {
+        private final String username;
+        private final String password;
 
+        LoginRequest(String username, String password) {
+            this.username = username;
+            this.password = password;
+        }
 
-    record LoginRequest(String username, String password) {}
+        public String username() {return username;}
 
-    record LoginResponse(String token, int circle_id) {}
+        public String password() {return password;}
 
-    record RegisterRequest(String username, String password, int circle_id){}
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (LoginRequest) obj;
+            return Objects.equals(this.username, that.username) &&
+                    Objects.equals(this.password, that.password);
+        }
 
-    record RegisterResponse(String token, int circle_id){}
+        @Override
+        public int hashCode() {
+            return Objects.hash(username, password);
+        }
+
+        @Override
+        public String toString() {
+            return "LoginRequest[" +
+                    "username=" + username + ", " +
+                    "password=" + password + ']';
+        }
+    }
+
+    static final class LoginResponse {
+        private final String token;
+        private final int circle_id;
+
+        LoginResponse(String token, int circle_id) {
+            this.token = token;
+            this.circle_id = circle_id;
+        }
+
+        public String token() {return token;}
+
+        public int circle_id() {return circle_id;}
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (LoginResponse) obj;
+            return Objects.equals(this.token, that.token) &&
+                    this.circle_id == that.circle_id;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(token, circle_id);
+        }
+
+        @Override
+        public String toString() {
+            return "LoginResponse[" +
+                    "token=" + token + ", " +
+                    "circle_id=" + circle_id + ']';
+        }
+    }
+
+    static final class RegisterRequest {
+        private final String username;
+        private final String password;
+        private final int circle_id;
+
+        RegisterRequest(String username, String password, int circle_id) {
+            this.username = username;
+            this.password = password;
+            this.circle_id = circle_id;
+        }
+
+        public String username() {return username;}
+
+        public String password() {return password;}
+
+        public int circle_id() {return circle_id;}
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (RegisterRequest) obj;
+            return Objects.equals(this.username, that.username) &&
+                    Objects.equals(this.password, that.password) &&
+                    this.circle_id == that.circle_id;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(username, password, circle_id);
+        }
+
+        @Override
+        public String toString() {
+            return "RegisterRequest[" +
+                    "username=" + username + ", " +
+                    "password=" + password + ", " +
+                    "circle_id=" + circle_id + ']';
+        }
+    }
+
+    static final class RegisterResponse {
+        private final String token;
+        private final int circle_id;
+
+        RegisterResponse(String token, int circle_id) {
+            this.token = token;
+            this.circle_id = circle_id;
+        }
+
+        public String token() {return token;}
+
+        public int circle_id() {return circle_id;}
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (RegisterResponse) obj;
+            return Objects.equals(this.token, that.token) &&
+                    this.circle_id == that.circle_id;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(token, circle_id);
+        }
+
+        @Override
+        public String toString() {
+            return "RegisterResponse[" +
+                    "token=" + token + ", " +
+                    "circle_id=" + circle_id + ']';
+        }
+    }
 }

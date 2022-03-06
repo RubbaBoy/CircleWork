@@ -17,30 +17,33 @@ public class CircleManager {
     public int createCircle() throws Exception{
         int circleId = -1;
         var conn = DataSource.getConnection();
-        try(var stmt = conn.prepareStatement("INSERT into circles()")){
+        try(var stmt = conn.prepareStatement("INSERT into circles DEFAULT VALUES")){
             stmt.executeUpdate();
         }
 
         try(var stmt = conn.prepareStatement(
-                "SELECT id FROM circles where id=(SELECT max(id) FROM circles ")){
+                "SELECT id FROM circles where id=(SELECT max(id) FROM circles)")){
             var query = stmt.executeQuery();
             if(query.next()){
                 circleId = query.getInt(1);
             }
         }
 
+        System.out.println("circleId");
+        System.out.println(circleId);
+
         try(var stmt = conn.prepareStatement(
                 "INSERT into circles " +
                         "(name, color, team_count, tasks_started, tasks_completed, raised_monthly, raised_total) " +
-                        "VALUES(?, ?, ?, ?, ?, ?, ?) WHERE id=?")){
-            stmt.setString(1, "Circle " + circleId);
-            stmt.setInt(2, 0);//color 0
-            stmt.setInt(3, 1);//teamcount of 1
-            stmt.setInt(4, 0);//no tasks started
-            stmt.setInt(5, 0);//no tasks completed
-            stmt.setInt(6, 0);//nothing raised this month
-            stmt.setInt(7, 0);//nothing raised total
-            stmt.setInt(8, circleId);//at the circle id
+                        "VALUES('Circle " + circleId + "', 0, 1, 0, 0, 0, 0)")){
+//            stmt.setString(1, "Circle " + circleId);
+//            stmt.setInt(2, 0);//color 0
+//            stmt.setInt(3, 1);//teamcount of 1
+//            stmt.setInt(4, 0);//no tasks started
+//            stmt.setInt(5, 0);//no tasks completed
+//            stmt.setInt(6, 0);//nothing raised this month
+//            stmt.setInt(7, 0);//nothing raised total
+//            stmt.setInt(8, circleId);//at the circle id
             stmt.executeUpdate();
         }
 
@@ -60,4 +63,5 @@ public class CircleManager {
         }
         return 0;
     }
+
 }

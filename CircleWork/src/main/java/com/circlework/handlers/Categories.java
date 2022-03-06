@@ -69,10 +69,85 @@ public class Categories extends BasicHandler {
 
     }
 
-    record ListResponse(List<Objects.GoalCategory> category_list){}
+    static final class ListResponse {
+        private final List<Objects.GoalCategory> category_list;
 
-    record ResourcesRequest(int id){}
+        ListResponse(List<Objects.GoalCategory> category_list) {this.category_list = category_list;}
 
-    record ResourcesResponse(List<Objects.CategoryResources> resources){}
+        public List<Objects.GoalCategory> category_list() {return category_list;}
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (ListResponse) obj;
+            return java.util.Objects.equals(this.category_list, that.category_list);
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(category_list);
+        }
+
+        @Override
+        public String toString() {
+            return "ListResponse[" +
+                    "category_list=" + category_list + ']';
+        }
+    }
+
+    static final class ResourcesRequest {
+        private final int id;
+
+        ResourcesRequest(int id) {this.id = id;}
+
+        public int id() {return id;}
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (ResourcesRequest) obj;
+            return this.id == that.id;
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(id);
+        }
+
+        @Override
+        public String toString() {
+            return "ResourcesRequest[" +
+                    "id=" + id + ']';
+        }
+    }
+
+    static final class ResourcesResponse {
+        private final List<Objects.CategoryResources> resources;
+
+        ResourcesResponse(List<Objects.CategoryResources> resources) {this.resources = resources;}
+
+        public List<Objects.CategoryResources> resources() {return resources;}
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (ResourcesResponse) obj;
+            return java.util.Objects.equals(this.resources, that.resources);
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(resources);
+        }
+
+        @Override
+        public String toString() {
+            return "ResourcesResponse[" +
+                    "resources=" + resources + ']';
+        }
+    }
 
 }

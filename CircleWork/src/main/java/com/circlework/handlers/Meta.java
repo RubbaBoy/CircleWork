@@ -118,5 +118,45 @@ public class Meta extends BasicHandler {
                     "url=" + url + ']';
         }
     }
-    record MetaResponse(String image, String description, String title) {}
+
+    static final class MetaResponse {
+        private final String image;
+        private final String description;
+        private final String title;
+
+        MetaResponse(String image, String description, String title) {
+            this.image = image;
+            this.description = description;
+            this.title = title;
+        }
+
+        public String image() {return image;}
+
+        public String description() {return description;}
+
+        public String title() {return title;}
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (MetaResponse) obj;
+            return Objects.equals(this.image, that.image) &&
+                    Objects.equals(this.description, that.description) &&
+                    Objects.equals(this.title, that.title);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(image, description, title);
+        }
+
+        @Override
+        public String toString() {
+            return "MetaResponse[" +
+                    "image=" + image + ", " +
+                    "description=" + description + ", " +
+                    "title=" + title + ']';
+        }
+    }
 }

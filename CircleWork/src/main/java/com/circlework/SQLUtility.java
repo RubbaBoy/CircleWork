@@ -40,9 +40,9 @@ public class SQLUtility {
          * - return the rows
          */
 
-        if(args.length < 1){
-            throw new SQLException();
-        }
+//        if(args.length < 1){
+//            throw new SQLException();
+//        }
 
         List<Row> rows = new LinkedList<>();//list for storing the created rows
 
