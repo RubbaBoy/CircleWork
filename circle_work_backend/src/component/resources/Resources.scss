@@ -1,0 +1,23 @@
+@use "src/scss/colors" as colors;
+
+.Goals {
+    .links-row, .videos-row {
+        .resource {
+            transition: box-shadow 100ms ease-in 0s;
+            cursor: pointer;
+
+            &:hover {
+                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+                transition: box-shadow 100ms ease-out 0s;
+            }
+        }
+    }
+
+    .videos-row {
+
+    }
+
+    .links-row {
+
+    }
+}

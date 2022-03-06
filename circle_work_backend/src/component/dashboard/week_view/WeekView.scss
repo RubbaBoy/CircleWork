@@ -1,0 +1,41 @@
+@use "src/scss/colors" as colors;
+
+.WeekView {
+    margin-top: 10vh;
+
+    .sep {
+        border-left: 1px solid colors.$separator;
+        height: 100%;
+    }
+
+    .card {
+        margin-right: calc(.5 * var(--bs-gutter-x));
+        margin-left: calc(.5 * var(--bs-gutter-x));
+        padding-left: 0;
+        padding-right: 0;
+
+        .card-body {
+            display: flex;
+            justify-content: space-around;
+
+            .day {
+                display: flex;
+                flex-direction: column;
+                width: calc(100% / 7);
+                padding: 0 8px;
+
+                .day-name {
+                    text-align: center;
+                }
+
+                .tasks {
+
+                }
+
+                &:hover {
+                    transform: scale(1.05);
+                }
+            }
+        }
+    }
+}

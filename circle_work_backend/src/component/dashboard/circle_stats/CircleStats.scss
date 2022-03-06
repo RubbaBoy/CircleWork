@@ -1,0 +1,26 @@
+@use "src/scss/colors" as colors;
+
+.GlobalStats {
+    //.title-line {
+    //    display: flex;
+    //}
+
+    .list {
+        list-style: none;
+
+        .entry {
+            display: flex;
+            height: 36px;
+            margin: 8px 0;
+
+            .place {
+                font-size: 24px;
+            }
+
+            .name {
+                margin-left: 16px;
+                line-height: 36px;
+            }
+        }
+    }
+}

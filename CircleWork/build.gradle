@@ -1,0 +1,29 @@
+plugins {
+    id 'java'
+}
+
+group 'com.circlework'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+
+    implementation 'com.zaxxer:HikariCP:5.0.1'
+    implementation 'org.postgresql:postgresql:42.3.3'
+    implementation 'ch.qos.logback:logback-classic:1.2.10'
+//    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+    implementation 'com.google.code.gson:gson:2.9.0'
+
+    implementation 'com.braintreepayments.gateway:braintree-java:3.14.0'
+    implementation 'org.jsoup:jsoup:1.14.3'
+
+}
+
+test {
+    useJUnitPlatform()
+}

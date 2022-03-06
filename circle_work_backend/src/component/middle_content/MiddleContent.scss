@@ -1,0 +1,11 @@
+@use "src/scss/colors" as colors;
+
+.MiddleContent {
+    display: block;
+    height: 80vh;
+    position: absolute;
+    background: colors.$blue;
+    border-radius: 40px 40px 0 0;
+    bottom: 0;
+    padding: 48px;
+}

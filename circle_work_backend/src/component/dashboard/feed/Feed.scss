@@ -1,0 +1,49 @@
+@use "src/scss/colors" as colors;
+
+.Feed {
+    .empty-feed {
+        color: #6c757d;
+    }
+}
+
+.feed {
+    list-style: none;
+
+    .item {
+        .body {
+            display: block;
+
+            .left {
+                float: left;
+                display: inline-block;
+
+                .title {
+                    font-weight: bold;
+                }
+
+                .body {
+                    margin: 0;
+                }
+            }
+
+            .right {
+                float: right;
+                margin-left: auto;
+                display: inline-block;
+
+                .approve {
+                    border-radius: 100%;
+                    width: 24px;
+                    height: 24px;
+                    cursor: pointer;
+
+                    transition: fill 100ms ease-in 0s;
+
+                    &:hover {
+                        fill: colors.$approve;
+                    }
+                }
+            }
+        }
+    }
+}

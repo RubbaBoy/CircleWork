@@ -1,0 +1,58 @@
+@use "src/scss/colors" as colors;
+
+$bar_width: min(calc((100vw / 12 * 2) - 48px), 250px);
+
+p.error {
+    color: #E00000;
+}
+
+.Dashboard {
+    .left-col {
+        .sidebar {
+            top: 0;
+            margin-top: 0;
+
+            .vert-text {
+                display: flex;
+                flex-direction: column;
+
+                span {
+                    //transformations for dashboard vert text
+
+                }
+            }
+
+            .bottom-round {
+                //position: relative;
+                width: 100%;
+                aspect-ratio: 1;
+                position: absolute;
+                bottom: 0;
+
+                &::after {
+                    width: 100%;
+                    aspect-ratio: 1;
+                    background: currentColor;
+                    border-radius: 100%;
+                    display: block;
+                    content: '';
+                    position: absolute;
+                    bottom: -50%;
+                    z-index: 1;
+                }
+            }
+        }
+    }
+
+    .button-row {
+        margin: 0 auto;
+
+        .btn {
+            width: auto;
+        }
+
+        .add {
+            margin-right: 1em;
+        }
+    }
+}
