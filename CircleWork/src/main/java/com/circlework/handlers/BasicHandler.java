@@ -8,6 +8,7 @@ import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import marcono1234.gson.recordadapter.RecordTypeAdapterFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,10 +58,12 @@ public abstract class BasicHandler implements HttpHandler {
     abstract void registerPaths();
 
     private static final Gson gsonBuilder = new GsonBuilder()
+            .registerTypeAdapterFactory(RecordTypeAdapterFactory.DEFAULT)
             .setDateFormat("yyyy-MM-dd")
             .create();
 
     private static final Gson queryGsonBuilder = new GsonBuilder()
+            .registerTypeAdapterFactory(RecordTypeAdapterFactory.DEFAULT)
             .disableHtmlEscaping()
             .create();
 
@@ -135,33 +138,37 @@ public abstract class BasicHandler implements HttpHandler {
 
             if (method.equalsIgnoreCase("GET")) {
                 var map = queryToMap(exchange.getRequestURI().getRawQuery());
-//                LOGGER.debug("map = {}", map);
+                LOGGER.debug("map = {}", map);
                 bodyString = queryGsonBuilder.toJson(map);
             } else {
                 bodyString = new String(exchange.getRequestBody().readAllBytes());
             }
 
-//                LOGGER.debug("bodyString = {}", bodyString);
+                LOGGER.debug("bodyString = {}", bodyString);
 
             var stuff = entry.getValue();
-//            LOGGER.debug("111 {}", entry.getKey().clazz().getCanonicalName());
+            LOGGER.debug("111 {}", entry.getKey().clazz().getCanonicalName());
             var json = gsonBuilder.fromJson(bodyString, entry.getKey().clazz());
-//                LOGGER.debug("222");
+                System.out.println("oksasaaaa");
+                LOGGER.info("222");
 
 
                 var tokenHeader = exchange.getRequestHeaders().get("token");
-//                LOGGER.debug("ayyy");
+                LOGGER.debug("ayyy");
                 var token = (tokenHeader != null && !tokenHeader.isEmpty()) ? tokenHeader.get(0) : null;
 
                 exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
 
                 stuff.handle(exchange, path, method, json, token);
             } catch (Exception e) {
+                System.out.println("ghjhjjkjjjj");
+                e.printStackTrace();
                 handleError(exchange, e);
             }
 
         } catch (Exception e) {
             // 500
+            System.out.println("okokokok");
             e.printStackTrace();
         }
     }

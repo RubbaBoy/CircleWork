@@ -33,6 +33,8 @@ public class ClientApplication {
 
     private void start() {
         try {
+            setLoggingLevel(ch.qos.logback.classic.Level.DEBUG);
+
             DataSource.init();
 
             var server = HttpServer.create(new InetSocketAddress("localhost", 8080), 0);
@@ -132,6 +134,11 @@ public class ClientApplication {
         } catch (Exception e) {
             LOGGER.error("Uh oh lmao", e);
         }
+    }
+
+    public static void setLoggingLevel(ch.qos.logback.classic.Level level) {
+        ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+        root.setLevel(level);
     }
 
     private <T extends BasicHandler> T createHandler(Class<T> handlerClass) {

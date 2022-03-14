@@ -1,13 +1,17 @@
 package com.circlework.handlers;
 
-import com.circlework.DataSource;
+import com.circlework.SQLUtility;
+import com.circlework.manager.AuthService;
 import com.sun.net.httpserver.HttpExchange;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 public class Auth extends BasicHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Auth.class);
 
     @Override
     public void registerPaths() {
@@ -16,189 +20,44 @@ public class Auth extends BasicHandler {
     }
 
     void login(HttpExchange exchange, String[] path, String method, LoginRequest request, String token) throws Exception {
-        try (var conn = DataSource.getConnection();
-             var stmt = conn.prepareStatement("SELECT circle_id WHERE username = ? AND password = ?")) {
-            stmt.setString(1, request.username);
-            stmt.setString(2, request.password);
-            var query = stmt.executeQuery();
-            if (query.next()) {
-                var circleId = query.getInt(1);
-                var uuid = UUID.randomUUID().toString();
-                authService.addToken(uuid, circleId);
-                setBody(exchange, new LoginResponse(uuid, circleId), 200);
-                return;
-            }
+        LOGGER.info("login request: {}", request);
+
+        var userResult = SQLUtility.executeQuery("SELECT id, circle_id FROM users WHERE name = ? AND password = ?", request.username(), request.password());
+
+        if (userResult.isEmpty()) {
+            setBody(exchange, Map.of("message", "invalid credentials"), 403);
+            return;
         }
 
-        setBody(exchange, Map.of("message", "invalid credentials"), 403);
+        var row = userResult.get(0);
+        int id = row.get(0);
+        int circleId = row.get(1);
+        var uuid = UUID.randomUUID().toString();
+        authService.addToken(uuid, new AuthService.UserSession(id, circleId));
+        setBody(exchange, new LoginResponse(uuid, circleId), 200);
     }
 
     void register(HttpExchange exchange, String[] path, String method, RegisterRequest request, String token) throws Exception {
-        var circleId = request.circle_id;
+        var circleId = request.circle_id();
 
-        try (var conn = DataSource.getConnection();
-             var stmt = conn.prepareStatement("INSERT into users (name, password, balance, circle_id) VALUES (?, ?, ?, ?)")) {
-            stmt.setString(1, request.username);
-            stmt.setString(2, request.password);
-            stmt.setInt(3, 0);
-
-            if (circleId == -1) {//if the user provides no preexisting circle
-                circleId = circleService.createCircle();//create a new circle for them
-            }
-
-            stmt.setInt(4, circleId);
-            stmt.executeUpdate();
-            var uuid = UUID.randomUUID().toString();
-            authService.addToken(uuid, circleId);//add the user to the authenticator
-
-            setBody(exchange, new RegisterResponse(uuid, circleId), 200);
+        if (circleId == -1) {//if the user provides no preexisting circle
+            circleId = circleService.createCircle();//create a new circle for them
         }
+
+        var added = SQLUtility.executeQuerySingle("INSERT into users (name, password, balance, circle_id) VALUES (?, ?, ?, ?) RETURNING id", request.username(), request.password(), 0, circleId);
+        var userId = added.<Integer>get(0);
+
+        var uuid = UUID.randomUUID().toString();
+        authService.addToken(uuid, new AuthService.UserSession(userId, circleId));//add the user to the authenticator
+
+        setBody(exchange, new RegisterResponse(uuid, circleId), 200);
     }
 
+    record LoginRequest(String username, String password) {}
 
-    static final class LoginRequest {
-        private final String username;
-        private final String password;
+    record LoginResponse(String token, int circle_id) {}
 
-        LoginRequest(String username, String password) {
-            this.username = username;
-            this.password = password;
-        }
+    record RegisterRequest(String username, String password, int circle_id) {}
 
-        public String username() {return username;}
-
-        public String password() {return password;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (LoginRequest) obj;
-            return Objects.equals(this.username, that.username) &&
-                    Objects.equals(this.password, that.password);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(username, password);
-        }
-
-        @Override
-        public String toString() {
-            return "LoginRequest[" +
-                    "username=" + username + ", " +
-                    "password=" + password + ']';
-        }
-    }
-
-    static final class LoginResponse {
-        private final String token;
-        private final int circle_id;
-
-        LoginResponse(String token, int circle_id) {
-            this.token = token;
-            this.circle_id = circle_id;
-        }
-
-        public String token() {return token;}
-
-        public int circle_id() {return circle_id;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (LoginResponse) obj;
-            return Objects.equals(this.token, that.token) &&
-                    this.circle_id == that.circle_id;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(token, circle_id);
-        }
-
-        @Override
-        public String toString() {
-            return "LoginResponse[" +
-                    "token=" + token + ", " +
-                    "circle_id=" + circle_id + ']';
-        }
-    }
-
-    static final class RegisterRequest {
-        private final String username;
-        private final String password;
-        private final int circle_id;
-
-        RegisterRequest(String username, String password, int circle_id) {
-            this.username = username;
-            this.password = password;
-            this.circle_id = circle_id;
-        }
-
-        public String username() {return username;}
-
-        public String password() {return password;}
-
-        public int circle_id() {return circle_id;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (RegisterRequest) obj;
-            return Objects.equals(this.username, that.username) &&
-                    Objects.equals(this.password, that.password) &&
-                    this.circle_id == that.circle_id;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(username, password, circle_id);
-        }
-
-        @Override
-        public String toString() {
-            return "RegisterRequest[" +
-                    "username=" + username + ", " +
-                    "password=" + password + ", " +
-                    "circle_id=" + circle_id + ']';
-        }
-    }
-
-    static final class RegisterResponse {
-        private final String token;
-        private final int circle_id;
-
-        RegisterResponse(String token, int circle_id) {
-            this.token = token;
-            this.circle_id = circle_id;
-        }
-
-        public String token() {return token;}
-
-        public int circle_id() {return circle_id;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (RegisterResponse) obj;
-            return Objects.equals(this.token, that.token) &&
-                    this.circle_id == that.circle_id;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(token, circle_id);
-        }
-
-        @Override
-        public String toString() {
-            return "RegisterResponse[" +
-                    "token=" + token + ", " +
-                    "circle_id=" + circle_id + ']';
-        }
-    }
+    record RegisterResponse(String token, int circle_id) {}
 }

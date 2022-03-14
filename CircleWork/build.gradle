@@ -7,6 +7,17 @@ version '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
+    exclusiveContent {
+        forRepository {
+            maven {
+                url = uri("https://jitpack.io")
+            }
+        }
+        filter {
+            // Only use JitPack for the `gson-record-type-adapter-factory` library
+            includeModule("com.github.Marcono1234", "gson-record-type-adapter-factory")
+        }
+    }
 }
 
 dependencies {
@@ -22,6 +33,7 @@ dependencies {
     implementation 'com.braintreepayments.gateway:braintree-java:3.14.0'
     implementation 'org.jsoup:jsoup:1.14.3'
     implementation 'com.google.inject:guice:5.1.0'
+    implementation 'com.github.Marcono1234:gson-record-type-adapter-factory:v0.2.0'
 
 }
 

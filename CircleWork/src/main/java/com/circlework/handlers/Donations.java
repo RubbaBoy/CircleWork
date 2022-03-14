@@ -42,41 +42,5 @@ public class Donations extends BasicHandler {
             setBody(exchange, new DonationResponse(raisedTotal, monthlyTotal), 200);
     }
 
-    static final class DonationResponse {
-        private final int total;
-        private final int month;
-
-        DonationResponse(int total, int month) {
-            this.total = total;
-            this.month = month;
-        }
-
-        public int total() {return total;}
-
-        public int month() {return month;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (DonationResponse) obj;
-            return this.total == that.total &&
-                    this.month == that.month;
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(total, month);
-        }
-
-        @Override
-        public String toString() {
-            return "DonationResponse[" +
-                    "total=" + total + ", " +
-                    "month=" + month + ']';
-        }
-    }
-
-
-
+    record DonationResponse(int total, int month) {}
 }

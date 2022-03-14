@@ -33,21 +33,21 @@ public class Goals extends BasicHandler {
             return;
         }
 
-        var user = authService.getUserFromToken(token).orElseThrow();
+        var userSession = authService.getUserFromToken(token).orElseThrow();
 
 
-        LOGGER.info("Adding goal: {}, {}, {}, {}, {}", request.is_private, request.category, request.goal_name, request.goal_body, request.due_date);
+        LOGGER.info("Adding goal: {}, {}, {}, {}, {}", request.is_private(), request.category(), request.goal_name(), request.goal_body(), request.due_date());
 
         //add the goal
         var idRow = SQLUtility.executeQuerySingle("INSERT into goals(owner, private, category, goal_name," +
-                        " goal_body, due_date, approval_count) VALUES(?, ? , ?, ?, ?, ?, ?) RETURNING id", user,
-                request.is_private, request.category, request.goal_name, request.goal_body, request.due_date, 0);
+                        " goal_body, due_date, approval_count) VALUES(?, ? , ?, ?, ?, ?, ?) RETURNING id", userSession.id(),
+                request.is_private(), request.category(), request.goal_name(), request.goal_body(), request.due_date(), 0);
         int goalId = idRow.get(0);
 
-        LOGGER.debug("user id = {}", user);
+        LOGGER.debug("user id = {}", userSession.id());
 
         //increment user's tasks started
-        SQLUtility.executeUpdate("UPDATE users SET tasks_started = tasks_started + 1 WHERE id = ?", user);
+        SQLUtility.executeUpdate("UPDATE users SET tasks_started = tasks_started + 1 WHERE id = ?", userSession.id());
 
         setBody(exchange, new AddResponse(goalId), 200);
     }
@@ -82,9 +82,9 @@ public class Goals extends BasicHandler {
             return;
         }
 
-        var userId = authService.getUserFromToken(token).orElseThrow();
+        var userSession = authService.getUserFromToken(token).orElseThrow();
 
-        var checkRow = SQLUtility.executeQuery("SELECT user_id FROM approved_goals WHERE user_id=? AND goal_id=?", userId, body.goal_id);
+        var checkRow = SQLUtility.executeQuery("SELECT user_id FROM approved_goals WHERE user_id=? AND goal_id=?", userSession.id(), body.goal_id);
 
         if (!checkRow.isEmpty()) {
             setBody(exchange, Map.of("message", "No Cheating"), 418);
@@ -97,7 +97,7 @@ public class Goals extends BasicHandler {
         //registering
         try (var conn = DataSource.getConnection();
              var stmt = conn.prepareStatement("INSERT INTO approved_goals (user_id, goal_id) VALUES (?, ?)")) {
-            stmt.setInt(1, userId);
+            stmt.setInt(1, userSession.id());
             stmt.setInt(2, body.goal_id);
 
             stmt.executeUpdate();
@@ -130,11 +130,11 @@ public class Goals extends BasicHandler {
 
         List<Objects.Goal> goalList = new LinkedList<>();
 
-        var userId = authService.getUserFromToken(token).orElseThrow();
+        var userSession = authService.getUserFromToken(token).orElseThrow();
         var goalRow = SQLUtility.executeQuery("SELECT id, owner, private, category, goal_name, goal_body, " +
-                "due_date, approval_count FROM goals WHERE owner=?", userId);
+                "due_date, approval_count FROM goals WHERE owner=?", userSession.id());
 
-        var userRow = SQLUtility.executeQuerySingle("SELECT name FROM users WHERE id=?", userId);
+        var userRow = SQLUtility.executeQuerySingle("SELECT name FROM users WHERE id=?", userSession.id());
 
         for (Row curRow : goalRow) {
             goalList.add(new Objects.Goal(curRow.get(0), curRow.get(1), userRow.get(0), curRow.get(2), curRow.get(3), curRow.get(4), curRow.get(5), curRow.get(6), curRow.get(7)));
@@ -143,160 +143,14 @@ public class Goals extends BasicHandler {
         setBody(exchange, goalList, 200);
     }
 
-    static final class AddRequest {
-        private final boolean is_private;
-        private final String goal_name;
-        private final String goal_body;
-        private final Timestamp due_date;
-        private final int category;
+    record AddRequest(boolean is_private, String goal_name, String goal_body,
+                      Timestamp due_date, int category) {}
 
-        AddRequest(boolean is_private, String goal_name, String goal_body, Timestamp due_date, int category) {
-            this.is_private = is_private;
-            this.goal_name = goal_name;
-            this.goal_body = goal_body;
-            this.due_date = due_date;
-            this.category = category;
-        }
+    record AddResponse(int goal_id) {}
 
-        public boolean is_private() {return is_private;}
+    record GetRequest(int goal_id) {}
 
-        public String goal_name() {return goal_name;}
+    record ApproveRequest(int goal_id) {}
 
-        public String goal_body() {return goal_body;}
-
-        public int category() {return category;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (AddRequest) obj;
-            return this.is_private == that.is_private &&
-                    java.util.Objects.equals(this.goal_name, that.goal_name) &&
-                    java.util.Objects.equals(this.goal_body, that.goal_body) &&
-                    this.category == that.category;
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(is_private, goal_name, goal_body, category);
-        }
-
-        @Override
-        public String toString() {
-            return "AddRequest[" +
-                    "is_private=" + is_private + ", " +
-                    "goal_name=" + goal_name + ", " +
-                    "goal_body=" + goal_body + ", " +
-                    "category=" + category + ']';
-        }
-    }
-
-    static final class AddResponse {
-        private final int goal_id;
-
-        AddResponse(int goal_id) {this.goal_id = goal_id;}
-
-        public int goal_id() {return goal_id;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (AddResponse) obj;
-            return this.goal_id == that.goal_id;
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(goal_id);
-        }
-
-        @Override
-        public String toString() {
-            return "AddResponse[" +
-                    "goal_id=" + goal_id + ']';
-        }
-    }
-
-    static final class GetRequest {
-        private final int goal_id;
-
-        GetRequest(int goal_id) {this.goal_id = goal_id;}
-
-        public int goal_id() {return goal_id;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (GetRequest) obj;
-            return this.goal_id == that.goal_id;
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(goal_id);
-        }
-
-        @Override
-        public String toString() {
-            return "GetRequest[" +
-                    "goal_id=" + goal_id + ']';
-        }
-    }
-
-    static final class ApproveRequest {
-        private final int goal_id;
-
-        ApproveRequest(int goal_id) {this.goal_id = goal_id;}
-
-        public int goal_id() {return goal_id;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (ApproveRequest) obj;
-            return this.goal_id == that.goal_id;
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(goal_id);
-        }
-
-        @Override
-        public String toString() {
-            return "ApproveRequest[" +
-                    "goal_id=" + goal_id + ']';
-        }
-    }
-
-    static final class ApproveResponse {
-        private final int approval_count;
-
-        ApproveResponse(int approval_count) {this.approval_count = approval_count;}
-
-        public int approval_count() {return approval_count;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (ApproveResponse) obj;
-            return this.approval_count == that.approval_count;
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(approval_count);
-        }
-
-        @Override
-        public String toString() {
-            return "ApproveResponse[" +
-                    "approval_count=" + approval_count + ']';
-        }
-    }
+    record ApproveResponse(int approval_count) {}
 }

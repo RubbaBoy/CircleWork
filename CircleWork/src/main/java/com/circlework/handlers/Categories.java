@@ -56,30 +56,5 @@ public class Categories extends BasicHandler {
         setBody(exchange, resourcesList, 200);
     }
 
-    static final class ResourcesRequest {
-        private final int id;
-
-        ResourcesRequest(int id) {this.id = id;}
-
-        public int id() {return id;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (ResourcesRequest) obj;
-            return this.id == that.id;
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(id);
-        }
-
-        @Override
-        public String toString() {
-            return "ResourcesRequest[" +
-                    "id=" + id + ']';
-        }
-    }
+    record ResourcesRequest(int id) {}
 }

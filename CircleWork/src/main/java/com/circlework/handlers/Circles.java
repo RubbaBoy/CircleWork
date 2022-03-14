@@ -21,8 +21,8 @@ public class Circles extends BasicHandler {
     public void registerPaths() {
 //        registerPath(new String[]{"adduserbalance"}, "PUT", AddBalanceRequest.class, this::addUserBalance);
 //        registerPath(new String[]{"addcirclebalance"}, "PUT", AddBalanceRequest.class, this::addCircleBalance);
-        registerPath(new String[]{"leaderboard", "completion"}, "GET", LeaderboardRequest.class, this::completionLeaderboard);
-        registerPath(new String[]{"leaderboard", "donation"}, "GET", LeaderboardRequest.class, this::donationLeaderboard);
+        registerPath(new String[]{"leaderboard", "completion"}, "GET", Objects.Empty.class, this::completionLeaderboard);
+        registerPath(new String[]{"leaderboard", "donation"}, "GET", Objects.Empty.class, this::donationLeaderboard);
         registerPath(new String[]{"users"}, "GET", UserRequest.class, this::users);
         registerPath(new String[]{"feed"}, "GET", Objects.Empty.class, this::feed);
         registerPath(new String[]{"donation"}, "GET", Objects.Empty.class, this::donation);
@@ -65,7 +65,7 @@ public class Circles extends BasicHandler {
             }
         }
     */
-    void completionLeaderboard(HttpExchange exchange, String[] path, String method, LeaderboardRequest request, String token) throws Exception {
+    void completionLeaderboard(HttpExchange exchange, String[] path, String method, Objects.Empty request, String token) throws Exception {
         if (!authService.validateToken(token)) {
             setBody(exchange, Map.of("message", "invalid authtoken"), 418);
             return;
@@ -84,7 +84,7 @@ public class Circles extends BasicHandler {
         setBody(exchange, circlesList, 200);
     }
 
-    void donationLeaderboard(HttpExchange exchange, String[] path, String method, LeaderboardRequest request,
+    void donationLeaderboard(HttpExchange exchange, String[] path, String method, Objects.Empty request,
                              String token) throws Exception {
 
         if (!authService.validateToken(token)) {
@@ -112,7 +112,7 @@ public class Circles extends BasicHandler {
             return;
         }
 
-        setBody(exchange, new UserResponse(getUsers(request.circle_id)), 200);
+        setBody(exchange, getUsers(request.circle_id), 200);
     }
 
     void feed(HttpExchange exchange, String[] path, String method, Objects.Empty request, String token) throws Exception {
@@ -123,13 +123,12 @@ public class Circles extends BasicHandler {
             return;
         }
 
-        var userId = authService.getUserFromToken(token).orElseThrow();
-        var user = userService.getUser(userId).get();
+        var userSession = authService.getUserFromToken(token).orElseThrow();
 
         //var stmt = conn.prepareStatement("SELECT id, owner, private, category, goal_name, goal_body, approval_count  FROM goals WHERE circle_id = ?")){
         //.setString(1, ""+request.circle_id); //Turns circle id into a string to work with the statement
 
-        var usersList = getUsers(user.circle_id());
+        var usersList = getUsers(userSession.circleId());
 
         List<Objects.Goal> goalList = new LinkedList<>();
 
@@ -147,7 +146,7 @@ public class Circles extends BasicHandler {
 
         goalList = goalList.parallelStream().filter(goal -> {
             try {
-                return SQLUtility.executeQuerySingle("SELECT COUNT(*) FROM approved_goals WHERE user_id=? AND goal_id=?", userId, goal.id()).<Long>get(0) == 0;
+                return SQLUtility.executeQuerySingle("SELECT COUNT(*) FROM approved_goals WHERE user_id=? AND goal_id=?", userSession.id(), goal.id()).<Long>get(0) == 0;
             } catch (SQLException e) {
                 e.printStackTrace();
                 return false;
@@ -168,12 +167,11 @@ public class Circles extends BasicHandler {
             return;
         }
 
-        var userId = authService.getUserFromToken(token).orElseThrow();
-        var user = userService.getUser(userId).get();
+        var userSession = authService.getUserFromToken(token).orElseThrow();
 
         try (var conn = DataSource.getConnection();
              var stmt = conn.prepareStatement("SELECT raised_total, raised_monthly FROM circles WHERE id = ?")) {
-            stmt.setInt(1, user.circle_id()); //Turns circle id into a string to work with the statement
+            stmt.setInt(1, userSession.circleId()); //Turns circle id into a string to work with the statement
 
             var query = stmt.executeQuery();
             if (query.next()) {
@@ -200,165 +198,7 @@ public class Circles extends BasicHandler {
         return usersList;
     }
 
-    static final class DonationResponse {
-        private final int total;
-        private final int month;
+    record DonationResponse(int total, int month) {}
 
-        DonationResponse(int total, int month) {
-            this.total = total;
-            this.month = month;
-        }
-
-        public int total() {return total;}
-
-        public int month() {return month;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (DonationResponse) obj;
-            return this.total == that.total &&
-                    this.month == that.month;
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(total, month);
-        }
-
-        @Override
-        public String toString() {
-            return "DonationResponse[" +
-                    "total=" + total + ", " +
-                    "month=" + month + ']';
-        }
-    }
-
-    static final class LeaderboardRequest {
-        LeaderboardRequest() {}
-
-        @Override
-        public boolean equals(Object obj) {
-            return obj == this || obj != null && obj.getClass() == this.getClass();
-        }
-
-        @Override
-        public int hashCode() {
-            return 1;
-        }
-
-        @Override
-        public String toString() {
-            return "LeaderboardRequest[]";
-        }
-    }
-
-    static final class LeaderboardResponse {
-        private final List<Objects.Circle> circles;
-
-        LeaderboardResponse(List<Objects.Circle> circles) {this.circles = circles;}
-
-        public List<Objects.Circle> circles() {return circles;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (LeaderboardResponse) obj;
-            return java.util.Objects.equals(this.circles, that.circles);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(circles);
-        }
-
-        @Override
-        public String toString() {
-            return "LeaderboardResponse[" +
-                    "circles=" + circles + ']';
-        }
-    }
-
-    static final class UserRequest {
-        private final int circle_id;
-
-        UserRequest(int circle_id) {this.circle_id = circle_id;}
-
-        public int circle_id() {return circle_id;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (UserRequest) obj;
-            return this.circle_id == that.circle_id;
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(circle_id);
-        }
-
-        @Override
-        public String toString() {
-            return "UserRequest[" +
-                    "circle_id=" + circle_id + ']';
-        }
-    }
-
-    static final class UserResponse {
-        private final List<Objects.User> user_list;
-
-        UserResponse(List<Objects.User> user_list) {this.user_list = user_list;}
-
-        public List<Objects.User> user_list() {return user_list;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (UserResponse) obj;
-            return java.util.Objects.equals(this.user_list, that.user_list);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(user_list);
-        }
-
-        @Override
-        public String toString() {
-            return "UserResponse[" +
-                    "user_list=" + user_list + ']';
-        }
-    }
-
-    static final class AddBalanceRequest {
-        private final int cents;
-
-        AddBalanceRequest(int cents) {this.cents = cents;}
-
-        public int cents() {return cents;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (AddBalanceRequest) obj;
-            return this.cents == that.cents;
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(cents);
-        }
-
-        @Override
-        public String toString() {
-            return "AddBalanceRequest[" +
-                    "cents=" + cents + ']';
-        }
-    }
+    record UserRequest(int circle_id) {}
 }

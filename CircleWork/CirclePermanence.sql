@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS  users (
     circle_id INT NOT NULL REFERENCES circles(id)
 );
 
-CREATE TABLE IF NOT EXISTS  goals(
+CREATE TABLE IF NOT EXISTS goals (
     id SERIAL PRIMARY KEY NOT NULL,
     owner INT NOT NULL REFERENCES users(id),
     private BOOL,

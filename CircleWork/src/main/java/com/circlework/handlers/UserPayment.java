@@ -31,7 +31,7 @@ public class UserPayment extends BasicHandler {
             return;
         }
 
-        var user = authService.getUserFromToken(token).orElseThrow();
+        var userSession = authService.getUserFromToken(token).orElseThrow();
 
         BraintreeGateway gateway = new BraintreeGateway(
                 Environment.SANDBOX,
@@ -63,57 +63,7 @@ public class UserPayment extends BasicHandler {
 
     }
 
-    static final class UserPaymentRequest {
-        private final String nonce;
+    record UserPaymentRequest(String nonce) {}
 
-        UserPaymentRequest(String nonce) {this.nonce = nonce;}
-
-        public String nonce() {return nonce;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (UserPaymentRequest) obj;
-            return java.util.Objects.equals(this.nonce, that.nonce);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(nonce);
-        }
-
-        @Override
-        public String toString() {
-            return "UserPaymentRequest[" +
-                    "nonce=" + nonce + ']';
-        }
-    }
-
-    static final class UserPaymentResponse {
-        private final BigDecimal amount;
-
-        UserPaymentResponse(BigDecimal amount) {this.amount = amount;}
-
-        public BigDecimal amount() {return amount;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (UserPaymentResponse) obj;
-            return java.util.Objects.equals(this.amount, that.amount);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(amount);
-        }
-
-        @Override
-        public String toString() {
-            return "UserPaymentResponse[" +
-                    "amount=" + amount + ']';
-        }
-    }
+    record UserPaymentResponse(BigDecimal amount) {}
 }

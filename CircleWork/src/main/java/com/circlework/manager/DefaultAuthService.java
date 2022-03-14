@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Singleton
 public class DefaultAuthService implements AuthService {
     // TODO: Remove
-    private final Map<String, Integer> authMap = new ConcurrentHashMap<>(Map.of("88006c51-4396-42f8-bd78-7a23e1e06c74", 2)); //token, user_id
+    private final Map<String, UserSession> authMap = new ConcurrentHashMap<>(); //token, user_id
 
     @Override
     public boolean validateToken(String token){
@@ -17,7 +17,7 @@ public class DefaultAuthService implements AuthService {
     }
 
     @Override
-    public Optional<Integer> getUserFromToken(String token){
+    public Optional<UserSession> getUserFromToken(String token){
         if(authMap.containsKey(token)){
             return Optional.of(authMap.get(token));
         }
@@ -25,8 +25,8 @@ public class DefaultAuthService implements AuthService {
     }
 
     @Override
-    public void addToken(String token, int userId){
-        authMap.put(token, userId);
+    public void addToken(String token, UserSession userSession){
+        authMap.put(token, userSession);
     }
 
     @Override
