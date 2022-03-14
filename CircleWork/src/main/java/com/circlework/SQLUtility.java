@@ -1,5 +1,8 @@
 package com.circlework;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,6 +11,7 @@ import java.util.List;
 
 public class SQLUtility {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SQLUtility.class);
 
 //    public static void main(String[] args) {
 //        var row = new Row();
@@ -46,9 +50,8 @@ public class SQLUtility {
 
         List<Row> rows = new LinkedList<>();//list for storing the created rows
 
-        var conn = DataSource.getConnection();
-
-        try(var stmt = conn.prepareStatement(query)){
+        try(var conn = DataSource.getConnection();
+            var stmt = conn.prepareStatement(query)){
             int index = 1;
 
             for(Object cur: args){
@@ -57,10 +60,8 @@ public class SQLUtility {
 
             var resultSet = stmt.executeQuery();
 
-            List<Object> collectRow = new LinkedList<>();//list for collecting all data in columns for a row
-
             while(resultSet.next()){
-
+                var collectRow = new LinkedList<>();//list for collecting all data in columns for a row
                 int colNum = resultSet.getMetaData().getColumnCount();
                 for(int i = 1; i <= colNum; i++){
                    collectRow.add(resultSet.getObject(i));

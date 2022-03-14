@@ -15,7 +15,7 @@ export const GlobalStats = () => {
     }
 
     function updateLeaderboard() {
-        fetchAuthed(displayMonth ? 'circles/leaderboard/completion' : 'circles/leaderboard/totaldonation', {method: 'GET'}).then(async res => {
+        fetchAuthed(displayMonth ? 'circles/leaderboard/completion' : 'circles/leaderboard/donation', {method: 'GET'}).then(async res => {
             let json = await res.json()
 
             if (res.status != 200) {
@@ -75,7 +75,7 @@ export const GlobalStats = () => {
             <Card.Body>
                 <ul className={"list"}>
                     {error != undefined ? <p className="error">{error}</p> : circles.map((circle, index) => {
-                        return <div className="entry">
+                        return <div key={circle.id} className="entry">
                             <span className="place">#{index + 1}</span>
                             <span className="name">{circle.name}</span>
                         </div>

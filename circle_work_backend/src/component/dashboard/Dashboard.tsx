@@ -170,6 +170,7 @@ export const Dashboard = () => {
                         <div className="bottom-round"></div>
 
                         <div className="vert-text">
+                            <span>D</span>
                             <span>R</span>
                             <span>A</span>
                             <span>O</span>

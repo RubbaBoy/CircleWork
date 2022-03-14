@@ -1,85 +1,72 @@
 package com.circlework.handlers;
 
-import com.circlework.AuthManager;
-import com.circlework.CircleManager;
 import com.circlework.DataSource;
 import com.circlework.Objects;
 import com.circlework.Row;
 import com.circlework.SQLUtility;
 import com.sun.net.httpserver.HttpExchange;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class Circles extends BasicHandler {
 
-    public Circles(AuthManager authManager, CircleManager circleManager) {
-        super(authManager, circleManager);
-    }
+    private static final Logger LOGGER = LoggerFactory.getLogger(Circles.class);
 
     @Override
     public void registerPaths() {
-        registerPath(new String[]{"adduserbalance"}, "PUT", AddBalanceRequest.class, this::addUserBalance);
-        registerPath(new String[]{"addcirclebalance"}, "PUT", AddBalanceRequest.class, this::addCircleBalance);
+//        registerPath(new String[]{"adduserbalance"}, "PUT", AddBalanceRequest.class, this::addUserBalance);
+//        registerPath(new String[]{"addcirclebalance"}, "PUT", AddBalanceRequest.class, this::addCircleBalance);
         registerPath(new String[]{"leaderboard", "completion"}, "GET", LeaderboardRequest.class, this::completionLeaderboard);
         registerPath(new String[]{"leaderboard", "donation"}, "GET", LeaderboardRequest.class, this::donationLeaderboard);
         registerPath(new String[]{"users"}, "GET", UserRequest.class, this::users);
-        registerPath(new String[]{"feed"}, "GET", FeedRequest.class, this::feed);
-        registerPath(new String[]{"donation"}, "GET", DonationRequest.class, this::donation);
+        registerPath(new String[]{"feed"}, "GET", Objects.Empty.class, this::feed);
+        registerPath(new String[]{"donation"}, "GET", Objects.Empty.class, this::donation);
     }
-
+/*
     void addUserBalance(HttpExchange exchange, String[] path, String method, AddBalanceRequest request, String token) throws Exception {
-        if (!authManager.validateToken(token)) {
+        if (!authService.validateToken(token)) {
             setBody(exchange, Map.of("message", "invalid authtoken"), 418);
             return;
         }
 
-        var userId = authManager.getUserFromToken(token).orElseThrow();
+        var userId = authService.getUserFromToken(token).orElseThrow();
 
         try {
 
             var balanceRow = SQLUtility.executeQuerySingle(
                     "UPDATE users SET approval_count=goals.approval_count+1 RETURNING approval_count");
-            return;
-
         } catch (Exception e) {
             setBody(exchange, Map.of("message", "invalid token"), 418);//give teapot for invalid token
-            return;
         }
-
-
     }
 
     void addCircleBalance(HttpExchange exchange, String[] path, String method, AddBalanceRequest request, String token) throws Exception {
-        if (!authManager.validateToken(token)) {
+        if (!authService.validateToken(token)) {
             setBody(exchange, Map.of("message", "invalid authtoken"), 418);
             return;
         }
 
-        var userId = authManager.getUserFromToken(token).orElseThrow();
+        var userId = authService.getUserFromToken(token).orElseThrow();
 
         try {
 
-            var circleRow = SQLUtility.executeQuerySingle("SELECT circle_id FROM users WHERE current");
+            var circleRow = SQLUtility.executeQuerySingle("SELECT circle_id FROM users WHERE current"); // TODO: What is `current`??
 
             var balanceRow = SQLUtility.executeQuerySingle(
                     "UPDATE users SET approval_count=goals.approval_count+1 RETURNING approval_count");
-            return;
-
         } catch (Exception e) {
             setBody(exchange, Map.of("message", "invalid token"), 418);//give teapot for invalid token
-            return;
         }
-
-
     }
-
+*/
     void completionLeaderboard(HttpExchange exchange, String[] path, String method, LeaderboardRequest request, String token) throws Exception {
-        if (!authManager.validateToken(token)) {
+        if (!authService.validateToken(token)) {
             setBody(exchange, Map.of("message", "invalid authtoken"), 418);
             return;
         }
@@ -88,7 +75,7 @@ public class Circles extends BasicHandler {
 
             List<Objects.Circle> circlesList = new LinkedList<>();
             var leaderBoardRow = SQLUtility.executeQuery("SELECT id, name, color, team_count, raised_monthly, raised_total," +
-                    " tasks_started, tasks_completed  from circles ORDER BY (tasks_completed / tasks_started) LIMIT 5");
+                    " tasks_started, tasks_completed  from circles ORDER BY COALESCE(tasks_completed / NULLIF(tasks_started, 0), 0) LIMIT 5");
 
             for (Row curRow : leaderBoardRow) {
                 circlesList.add(new Objects.Circle(curRow.get(0), curRow.get(1), curRow.get(2), curRow.get(3), curRow.get(4),
@@ -98,6 +85,7 @@ public class Circles extends BasicHandler {
 
             setBody(exchange, circlesList, 200);
         } catch (Exception e) {
+            e.printStackTrace();
             setBody(exchange, Map.of("message", "error"), 500);
         }
     }
@@ -105,7 +93,7 @@ public class Circles extends BasicHandler {
     void donationLeaderboard(HttpExchange exchange, String[] path, String method, LeaderboardRequest request,
                              String token) throws Exception {
 
-        if (!authManager.validateToken(token)) {
+        if (!authService.validateToken(token)) {
             setBody(exchange, Map.of("message", "invalid authtoken"), 418);
             return;
         }
@@ -124,14 +112,14 @@ public class Circles extends BasicHandler {
 
             setBody(exchange, circlesList, 200);
         } catch (Exception e) {
+            e.printStackTrace();
             setBody(exchange, Map.of("message", "error"), 500);
         }
-
     }
 
 
     void users(HttpExchange exchange, String[] path, String method, UserRequest request, String token) throws IOException {
-        if (!authManager.validateToken(token)) {
+        if (!authService.validateToken(token)) {
             setBody(exchange, Map.of("message", "invalid authtoken"), 418);
             return;
         }
@@ -142,37 +130,39 @@ public class Circles extends BasicHandler {
             setBody(exchange, new UserResponse(getUsers(request.circle_id)), 200);
 
         } catch (Exception e) {
+            e.printStackTrace();
             setBody(exchange, Map.of("message", "error"), 500);
         }
     }
 
-    void feed(HttpExchange exchange, String[] path, String method, FeedRequest request, String token) throws Exception {
+    void feed(HttpExchange exchange, String[] path, String method, Objects.Empty request, String token) throws Exception {
         // TODO: feed
 
-        if (!authManager.validateToken(token)) {
+        if (!authService.validateToken(token)) {
             setBody(exchange, Map.of("message", "invalid token"), 418);//give teapot for invalid token
             return;
         }
 
-        var userId = authManager.getUserFromToken(token).orElseThrow();
+        var userId = authService.getUserFromToken(token).orElseThrow();
+        var user = userService.getUser(userId).get();
 
         try {
             //var stmt = conn.prepareStatement("SELECT id, owner, private, category, goal_name, goal_body, approval_count  FROM goals WHERE circle_id = ?")){
             //.setString(1, ""+request.circle_id); //Turns circle id into a string to work with the statement
 
-            var usersList = getUsers(request.circle_id);
+            var usersList = getUsers(user.circle_id());
 
             List<Objects.Goal> goalList = new LinkedList<>();
 
-            for (Objects.User user : usersList) {
-                var feedRows = SQLUtility.executeQuery("SELECT id, private, category, goal_name, goal_body, due_date, approval_count FROM goals WHERE approval_count > 0 AND owner = ?", user.id());
+            for (Objects.User userObject : usersList) {
+                var feedRows = SQLUtility.executeQuery("SELECT id, private, category, goal_name, goal_body, due_date, approval_count FROM goals WHERE approval_count > 0 AND owner = ?", userObject.id());
 
                 //var usernameRow = SQLUtility.executeQuerySingle("SELECT name FROM users WHERE id = ?");
 
 
                 for (Row curRow : feedRows) {
                     //note password is not retrieveda
-                    goalList.add(new Objects.Goal(curRow.get(0), user.id(), user.username(), curRow.get(1), curRow.get(2), curRow.get(3), curRow.get(4), curRow.get(5), curRow.get(6)));
+                    goalList.add(new Objects.Goal(curRow.get(0), userObject.id(), userObject.username(), curRow.get(1), curRow.get(2), curRow.get(3), curRow.get(4), curRow.get(5), curRow.get(6)));
                 }
             }
 
@@ -185,9 +175,10 @@ public class Circles extends BasicHandler {
                 }
             }).toList();
 
-            setBody(exchange, new FeedResponse(goalList), 200);
+            setBody(exchange, goalList, 200);
 
-        } catch (Exception E) {
+        } catch (Exception e) {
+            e.printStackTrace();
             setBody(exchange, Map.of("message", "error"), 500);
         }
 
@@ -195,17 +186,20 @@ public class Circles extends BasicHandler {
     }
 
     //gets total and monthly returns a body containing the exchange, a donationresponse, and a status code
-    void donation(HttpExchange exchange, String[] path, String method, DonationRequest request, String token) throws Exception {
+    void donation(HttpExchange exchange, String[] path, String method, Objects.Empty request, String token) throws Exception {
         // TODO auth??
 
-        if (!authManager.validateToken(token)) {
+        if (!authService.validateToken(token)) {
             setBody(exchange, Map.of("message", "invalid token"), 418);//give teapot for invalid token
             return;
         }
 
+        var userId = authService.getUserFromToken(token).orElseThrow();
+        var user = userService.getUser(userId).get();
+
         var conn = DataSource.getConnection();
-        try (var stmt = conn.prepareStatement("SELECT raised_total, raised_monthly FROM circles WHERE circle_id = ?")) {
-            stmt.setString(1, "" + request.circle_id); //Turns circle id into a string to work with the statement
+        try (var stmt = conn.prepareStatement("SELECT raised_total, raised_monthly FROM circles WHERE id = ?")) {
+            stmt.setInt(1, user.circle_id()); //Turns circle id into a string to work with the statement
 
             var query = stmt.executeQuery();
             if (query.next()) {
@@ -223,73 +217,46 @@ public class Circles extends BasicHandler {
         List<Objects.User> usersList = new LinkedList<>();
 
 
-        var userRows = SQLUtility.executeQuery("SELECT id, username, balance, circle_id FROM users WHERE circle_id=?", circle_id);
+        var userRows = SQLUtility.executeQuery("SELECT id, name, balance, circle_id FROM users WHERE circle_id=?", circle_id);
         for (Row curRow : userRows) {
             //note password is not retrieved
-            usersList.add(new Objects.User(curRow.get(0), curRow.get(1), "pass", curRow.get(2), curRow.get(3)));
+            usersList.add(new Objects.User(curRow.get(0), curRow.get(1), "", curRow.get(2), curRow.get(3)));
         }
         return usersList;
     }
 
-    static final class DonationRequest {
-        private final int circle_id;
-
-        DonationRequest(int circle_id) {this.circle_id = circle_id;}
-
-        public int circle_id() {return circle_id;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (DonationRequest) obj;
-            return this.circle_id == that.circle_id;
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(circle_id);
-        }
-
-        @Override
-        public String toString() {
-            return "DonationRequest[" +
-                    "circle_id=" + circle_id + ']';
-        }
-    }
-
     static final class DonationResponse {
-        private final int raised_total;
-        private final int raised_monthly;
+        private final int total;
+        private final int month;
 
-        DonationResponse(int raised_total, int raised_monthly) {
-            this.raised_total = raised_total;
-            this.raised_monthly = raised_monthly;
+        DonationResponse(int total, int month) {
+            this.total = total;
+            this.month = month;
         }
 
-        public int raised_total() {return raised_total;}
+        public int total() {return total;}
 
-        public int raised_monthly() {return raised_monthly;}
+        public int month() {return month;}
 
         @Override
         public boolean equals(Object obj) {
             if (obj == this) return true;
             if (obj == null || obj.getClass() != this.getClass()) return false;
             var that = (DonationResponse) obj;
-            return this.raised_total == that.raised_total &&
-                    this.raised_monthly == that.raised_monthly;
+            return this.total == that.total &&
+                    this.month == that.month;
         }
 
         @Override
         public int hashCode() {
-            return java.util.Objects.hash(raised_total, raised_monthly);
+            return java.util.Objects.hash(total, month);
         }
 
         @Override
         public String toString() {
             return "DonationResponse[" +
-                    "raised_total=" + raised_total + ", " +
-                    "raised_monthly=" + raised_monthly + ']';
+                    "total=" + total + ", " +
+                    "month=" + month + ']';
         }
     }
 
@@ -390,60 +357,6 @@ public class Circles extends BasicHandler {
         public String toString() {
             return "UserResponse[" +
                     "user_list=" + user_list + ']';
-        }
-    }
-
-    static final class FeedRequest {
-        private final int circle_id;
-
-        FeedRequest(int circle_id) {this.circle_id = circle_id;}
-
-        public int circle_id() {return circle_id;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (FeedRequest) obj;
-            return this.circle_id == that.circle_id;
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(circle_id);
-        }
-
-        @Override
-        public String toString() {
-            return "FeedRequest[" +
-                    "circle_id=" + circle_id + ']';
-        }
-    }
-
-    static final class FeedResponse {
-        private final List<Objects.Goal> goal_list;
-
-        FeedResponse(List<Objects.Goal> goal_list) {this.goal_list = goal_list;}
-
-        public List<Objects.Goal> goal_list() {return goal_list;}
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (FeedResponse) obj;
-            return java.util.Objects.equals(this.goal_list, that.goal_list);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(goal_list);
-        }
-
-        @Override
-        public String toString() {
-            return "FeedResponse[" +
-                    "goal_list=" + goal_list + ']';
         }
     }
 

@@ -1,7 +1,10 @@
-import React, { Fragment } from 'react'
+import React, {Fragment, useEffect, useState} from 'react'
 import './Home.scss'
 import {Card, Col, Row} from "react-bootstrap";
 import {Link} from "react-router-dom";
+import {Charity} from "../../logic/objects";
+import {fetchApi} from "../../logic/request-helper";
+
 
 export function navSideButton(name: string, path: string, color: string = '425dff'): JSX.Element {
     return (
@@ -22,6 +25,23 @@ interface HomeProps {
 
 export const Home = (props: HomeProps) => {
     const {loggedIn, logout} = props
+    const [charities, setCharities] = useState<Charity[]>([]);
+
+    useEffect(() => {
+        console.log('useEffect');
+        fetchApi('charities/list', {method: 'GET'}).then(async res => {
+            let json = await res.json();
+
+            if (res.status != 200) {
+                console.log('Bad request status ' + res.status)
+                console.log(json)
+                return
+            }
+            let charities: Charity[] = json
+            console.log(charities);
+            setCharities(charities);
+        })
+    }, [])
 
     return (
         <Row className="Home justify-content-md-center m-0">
@@ -30,7 +50,9 @@ export const Home = (props: HomeProps) => {
                 {hrefSideButton('Donation Leaderboard', '#donation')}
             </div>
 
-            <Col xl={2} className="left-col">
+            <Col xs={2} className="left-col">
+                <div className="spacer"></div>
+
                 <div className="sidebar">
                     <div className="logo-parent"></div>
 
@@ -51,7 +73,11 @@ export const Home = (props: HomeProps) => {
             </Col>
             <Col xl={8} className="col">
                 <div className="canvas">
-                    Animation shit here
+                    <div className={"centered-container"}>
+                        <span className="moving-circle third" data-name="Team 2"></span>
+                        <span className="moving-circle first" data-name="Team 1"></span>
+                        <span className="moving-circle second" data-name="Team 3"></span>
+                    </div>
                 </div>
 
                 <h3 id={"about"}>What is Circle Work?</h3>
@@ -62,12 +88,12 @@ export const Home = (props: HomeProps) => {
 
                 <h3 id={"donation"}>Our Charities</h3>
                 <div className="charities">
-                    {['one', 'two', 'three', 'four'].map(i => (
-                        <div className="charity">
-                            <img src="https://via.placeholder.com/150" alt="" className="logo"/>
-                            <span className="name">Child's Play</span>
-                        </div>
-                    ))}
+                    {charities.map(i => //TODO
+                        <a className="charity" href={i.link}>
+                            <img src={`/images/charities/${i.image}`} className="logo" alt="Charity"/>
+                            <span className="name">{i.name}</span>
+                        </a>
+                    )}
                 </div>
             </Col>
             <Col xl={2} className="col">

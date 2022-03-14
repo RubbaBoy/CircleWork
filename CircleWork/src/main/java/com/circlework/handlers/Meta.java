@@ -1,10 +1,9 @@
 package com.circlework.handlers;
 
-import com.circlework.AuthManager;
-import com.circlework.CircleManager;
+import com.circlework.manager.AuthService;
+import com.circlework.manager.CircleService;
 import com.sun.net.httpserver.HttpExchange;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
@@ -13,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -30,10 +28,6 @@ public class Meta extends BasicHandler {
 
     private final ExecutorService executor = ForkJoinPool.commonPool();
     private final Map<String, MetaResponse> cache = new ConcurrentHashMap<>();
-
-    public Meta(AuthManager authManager, CircleManager circleManager) {
-        super(authManager, circleManager);
-    }
 
     @Override
     void registerPaths() {
@@ -83,6 +77,7 @@ public class Meta extends BasicHandler {
                 cache.put(request.url(), metaResponse);
                 setBody(exchange, metaResponse);
             } catch (Exception e) {
+                e.printStackTrace();
                 try {
                     setBody(exchange, Map.of("message", e.getMessage()), 500);
                 } catch (IOException ex) {

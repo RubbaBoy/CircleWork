@@ -27,6 +27,8 @@ export const Register = (props: RegisterProps) => {
 
     function register(useCode: boolean) {
         fetchApi('auth/register', {
+            method: 'POST',
+            // mode: 'cors',
             body: JSON.stringify({
                 'username': usernameRef.current?.value ?? '',
                 'password': passwordRef.current?.value ?? '',
@@ -41,6 +43,8 @@ export const Register = (props: RegisterProps) => {
                 setError(true)
                 return;
             }
+
+            console.log(json);
 
             setError(false)
 

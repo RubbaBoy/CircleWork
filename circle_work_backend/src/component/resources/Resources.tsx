@@ -12,7 +12,7 @@ import {convertColor} from "../../logic/utilities";
 export const Resources = () => {
     const {id} = useParams<'id'>();
     const [error, setError] = useState<string | undefined>()
-    const [category, setCategory] = useState<GoalCategory | undefined>({id: 0, name: 'Exercise', description: 'idk', color: 15569972})
+    const [category, setCategory] = useState<GoalCategory | undefined>()
     const [resources, setResources] = useState<CategoryResources[]>([])
 
     // useEffect(() => {

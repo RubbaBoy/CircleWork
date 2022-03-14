@@ -28,7 +28,9 @@ GET /api/circles/leaderboard/completion //leaderboard ordered by completion rati
     request: {}
     response: [{"circle_id": 0, "circle_name": "", "color": 0, "total_raised": 0, "attempted": 0, "completed": 0}, ...]
 
-GET /api/circles/leaderboard/totaldonation //leaderboard ordered by total donations
+// The following requests use the current Circle as the logged in user
+
+GET /api/circles/leaderboard/donation //leaderboard ordered by total donations
     request: {}
     response: [{"circle_id": 0, "circle_name": "", "color": 0, "total_raised": 0, "attempted": 0, "completed": 0}, ...]
 

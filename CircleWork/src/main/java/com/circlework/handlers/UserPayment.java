@@ -5,8 +5,6 @@ import com.braintreegateway.Environment;
 import com.braintreegateway.Result;
 import com.braintreegateway.Transaction;
 import com.braintreegateway.TransactionRequest;
-import com.circlework.AuthManager;
-import com.circlework.CircleManager;
 import com.circlework.Objects;
 import com.sun.net.httpserver.HttpExchange;
 
@@ -16,10 +14,6 @@ import java.util.Map;
 public class UserPayment extends BasicHandler {
 
     private final BigDecimal MONTHLY_CHARGE = new BigDecimal(500);
-
-    public UserPayment(AuthManager authManager, CircleManager circleManager) {
-        super(authManager, circleManager);
-    }
 
     @Override
     public void registerPaths() {
@@ -32,12 +26,12 @@ public class UserPayment extends BasicHandler {
     }
 
     void userPayment(HttpExchange exchange, String[] path, String method, UserPaymentRequest body, String token) throws Exception {
-        if (!authManager.validateToken(token)) {
+        if (!authService.validateToken(token)) {
             setBody(exchange, Map.of("message", "invalid authtoken"), 418);
             return;
         }
 
-        var user = authManager.getUserFromToken(token).orElseThrow();
+        var user = authService.getUserFromToken(token).orElseThrow();
 
         try {
 
@@ -70,12 +64,63 @@ public class UserPayment extends BasicHandler {
             }
 
         } catch (Exception e) {
+            e.printStackTrace();
             setBody(exchange, Map.of("message", "error"), 500);
         }
 
     }
 
-    record UserPaymentRequest(String nonce) {}
+    static final class UserPaymentRequest {
+        private final String nonce;
 
-    record UserPaymentResponse(BigDecimal amount) {}
+        UserPaymentRequest(String nonce) {this.nonce = nonce;}
+
+        public String nonce() {return nonce;}
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (UserPaymentRequest) obj;
+            return java.util.Objects.equals(this.nonce, that.nonce);
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(nonce);
+        }
+
+        @Override
+        public String toString() {
+            return "UserPaymentRequest[" +
+                    "nonce=" + nonce + ']';
+        }
+    }
+
+    static final class UserPaymentResponse {
+        private final BigDecimal amount;
+
+        UserPaymentResponse(BigDecimal amount) {this.amount = amount;}
+
+        public BigDecimal amount() {return amount;}
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (UserPaymentResponse) obj;
+            return java.util.Objects.equals(this.amount, that.amount);
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(amount);
+        }
+
+        @Override
+        public String toString() {
+            return "UserPaymentResponse[" +
+                    "amount=" + amount + ']';
+        }
+    }
 }

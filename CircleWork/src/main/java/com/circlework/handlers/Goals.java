@@ -1,27 +1,20 @@
 package com.circlework.handlers;
 
-import com.circlework.AuthManager;
-import com.circlework.CircleManager;
+import com.circlework.manager.AuthService;
+import com.circlework.manager.CircleService;
 import com.circlework.DataSource;
 import com.circlework.Objects;
 import com.circlework.Row;
 import com.circlework.SQLUtility;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public class Goals extends BasicHandler {
-
-    public Goals(AuthManager authManager, CircleManager circleManager) {
-        super(authManager, circleManager);
-    }
 
     @Override
     public void registerPaths() {
@@ -32,20 +25,25 @@ public class Goals extends BasicHandler {
     }
 
     void add(HttpExchange exchange, String[] path, String method, AddRequest request, String token) throws Exception {
-//        var userIdOptional = authManager.validateToken(token);
+//        var userIdOptional = authService.validateToken(token);
 
-        if(!authManager.validateToken(token)){
+        if(!authService.validateToken(token)){
             setBody(exchange, Map.of("message", "invalid authtoken"), 418);
             return;
         }
 
-        var user = authManager.getUserFromToken(token).orElseThrow();
+        var user = authService.getUserFromToken(token).orElseThrow();
 
         try{
+            //add the goal
             var idRow = SQLUtility.executeQuerySingle("INSERT into goals(owner, private, category, goal_name," +
                             " goal_body, approval_count) VALUES(?, ? , ?, ?, ?, ?) RETURNING id", user,
                     request.is_private, request.category, request.goal_name, request.goal_body, 1);
             int goalId = idRow.get(0);
+
+            //increment user's tasks started
+            SQLUtility.executeQuery("UPDATE users SET tasks_started = tasks_started + 1 WHERE id=?", user);
+
             setBody(exchange, new AddResponse(goalId), 200);
         }catch (Exception e){
             setBody(exchange, Map.of("message", "error"), 500);
@@ -53,7 +51,7 @@ public class Goals extends BasicHandler {
     }
 
     void get(HttpExchange exchange, String[] path, String method, GetRequest body, String token) throws Exception{
-        if(!authManager.validateToken(token)){
+        if(!authService.validateToken(token)){
             setBody(exchange, Map.of("message", "invalid authtoken"), 418);
             return;
         }
@@ -81,12 +79,12 @@ public class Goals extends BasicHandler {
     }
 
     void approve(HttpExchange exchange, String[] path, String method, ApproveRequest body, String token) throws Exception{
-        if(!authManager.validateToken(token)){
+        if(!authService.validateToken(token)){
             setBody(exchange, Map.of("message", "invalid authtoken"), 418);
             return;
         }
 
-        var userId = authManager.getUserFromToken(token).orElseThrow();
+        var userId = authService.getUserFromToken(token).orElseThrow();
 
         try {
 
@@ -119,28 +117,29 @@ public class Goals extends BasicHandler {
             // also check if they have approved aslrteady
 
         } catch (Exception e){
+            e.printStackTrace();
             setBody(exchange, Map.of("message", "error"), 500);
         }
     }
 
     /*
-       if (!authManager.validateToken(token)) {
+       if (!authService.validateToken(token)) {
             setBody(exchange, Map.of("message", "invalid token"), 418);//give teapot for invalid token
             return;
         }
 
-        var userId = authManager.getUserFromToken(token).orElseThrow();
+        var userId = authService.getUserFromToken(token).orElseThrow();
      */
 
     void list(HttpExchange exchange, String[] path, String method, Objects.Empty empty, String token ) throws Exception{
-        if (!authManager.validateToken(token)) {
+        if (!authService.validateToken(token)) {
             setBody(exchange, Map.of("message", "invalid token"), 418);//give teapot for invalid token
             return;
         }
 
         List<Objects.Goal> goalList = new LinkedList<>();
 
-        var userId = authManager.getUserFromToken(token).orElseThrow();
+        var userId = authService.getUserFromToken(token).orElseThrow();
 
         try {
             var goalRow = SQLUtility.executeQuery("SELECT id, owner, private, category, goal_name, goal_body, " +
@@ -159,19 +158,214 @@ public class Goals extends BasicHandler {
         }
     }
 
-    record AddRequest(boolean is_private, String goal_name, String goal_body, int category){}
+    static final class AddRequest {
+        private final boolean is_private;
+        private final String goal_name;
+        private final String goal_body;
+        private final int category;
 
-    record AddResponse(int goal_id){}
+        AddRequest(boolean is_private, String goal_name, String goal_body, int category) {
+            this.is_private = is_private;
+            this.goal_name = goal_name;
+            this.goal_body = goal_body;
+            this.category = category;
+        }
 
-    record GetRequest(int goal_id){}
+        public boolean is_private() {return is_private;}
 
-    record GetResponse(Objects.Goal goal){}
+        public String goal_name() {return goal_name;}
 
-    record ApproveRequest(int goal_id){}
+        public String goal_body() {return goal_body;}
 
-    record ApproveResponse(int approval_count){}
+        public int category() {return category;}
 
-    record ListResponse(List<Objects.Goal> goalList){}
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (AddRequest) obj;
+            return this.is_private == that.is_private &&
+                    java.util.Objects.equals(this.goal_name, that.goal_name) &&
+                    java.util.Objects.equals(this.goal_body, that.goal_body) &&
+                    this.category == that.category;
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(is_private, goal_name, goal_body, category);
+        }
+
+        @Override
+        public String toString() {
+            return "AddRequest[" +
+                    "is_private=" + is_private + ", " +
+                    "goal_name=" + goal_name + ", " +
+                    "goal_body=" + goal_body + ", " +
+                    "category=" + category + ']';
+        }
+    }
+
+    static final class AddResponse {
+        private final int goal_id;
+
+        AddResponse(int goal_id) {this.goal_id = goal_id;}
+
+        public int goal_id() {return goal_id;}
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (AddResponse) obj;
+            return this.goal_id == that.goal_id;
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(goal_id);
+        }
+
+        @Override
+        public String toString() {
+            return "AddResponse[" +
+                    "goal_id=" + goal_id + ']';
+        }
+    }
+
+    static final class GetRequest {
+        private final int goal_id;
+
+        GetRequest(int goal_id) {this.goal_id = goal_id;}
+
+        public int goal_id() {return goal_id;}
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (GetRequest) obj;
+            return this.goal_id == that.goal_id;
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(goal_id);
+        }
+
+        @Override
+        public String toString() {
+            return "GetRequest[" +
+                    "goal_id=" + goal_id + ']';
+        }
+    }
+
+    static final class GetResponse {
+        private final Objects.Goal goal;
+
+        GetResponse(Objects.Goal goal) {this.goal = goal;}
+
+        public Objects.Goal goal() {return goal;}
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (GetResponse) obj;
+            return java.util.Objects.equals(this.goal, that.goal);
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(goal);
+        }
+
+        @Override
+        public String toString() {
+            return "GetResponse[" +
+                    "goal=" + goal + ']';
+        }
+    }
+
+    static final class ApproveRequest {
+        private final int goal_id;
+
+        ApproveRequest(int goal_id) {this.goal_id = goal_id;}
+
+        public int goal_id() {return goal_id;}
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (ApproveRequest) obj;
+            return this.goal_id == that.goal_id;
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(goal_id);
+        }
+
+        @Override
+        public String toString() {
+            return "ApproveRequest[" +
+                    "goal_id=" + goal_id + ']';
+        }
+    }
+
+    static final class ApproveResponse {
+        private final int approval_count;
+
+        ApproveResponse(int approval_count) {this.approval_count = approval_count;}
+
+        public int approval_count() {return approval_count;}
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (ApproveResponse) obj;
+            return this.approval_count == that.approval_count;
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(approval_count);
+        }
+
+        @Override
+        public String toString() {
+            return "ApproveResponse[" +
+                    "approval_count=" + approval_count + ']';
+        }
+    }
+
+    static final class ListResponse {
+        private final List<Objects.Goal> goalList;
+
+        ListResponse(List<Objects.Goal> goalList) {this.goalList = goalList;}
+
+        public List<Objects.Goal> goalList() {return goalList;}
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (ListResponse) obj;
+            return java.util.Objects.equals(this.goalList, that.goalList);
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(goalList);
+        }
+
+        @Override
+        public String toString() {
+            return "ListResponse[" +
+                    "goalList=" + goalList + ']';
+        }
+    }
 
 
 

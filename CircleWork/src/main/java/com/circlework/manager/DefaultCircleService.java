@@ -1,30 +1,22 @@
-package com.circlework;
+package com.circlework.manager;
 
-import com.circlework.handlers.Auth;
-import com.sun.net.httpserver.HttpExchange;
+import com.circlework.DataSource;
+import com.google.inject.Singleton;
 
-import javax.xml.crypto.Data;
-import java.util.Map;
-import java.util.UUID;
-
-public class CircleManager {
-
-    /**
-     * create a new circle
-     *
-     * @return the id of the newly created circle
-     * */
-    public int createCircle() throws Exception{
+@Singleton
+public class DefaultCircleService implements CircleService {
+    @Override
+    public int createCircle() throws Exception {
         int circleId = -1;
         var conn = DataSource.getConnection();
-        try(var stmt = conn.prepareStatement("INSERT into circles DEFAULT VALUES")){
+        try (var stmt = conn.prepareStatement("INSERT into circles DEFAULT VALUES")) {
             stmt.executeUpdate();
         }
 
-        try(var stmt = conn.prepareStatement(
-                "SELECT id FROM circles where id=(SELECT max(id) FROM circles)")){
+        try (var stmt = conn.prepareStatement(
+                "SELECT id FROM circles where id=(SELECT max(id) FROM circles)")) {
             var query = stmt.executeQuery();
-            if(query.next()){
+            if (query.next()) {
                 circleId = query.getInt(1);
             }
         }
@@ -32,10 +24,10 @@ public class CircleManager {
         System.out.println("circleId");
         System.out.println(circleId);
 
-        try(var stmt = conn.prepareStatement(
+        try (var stmt = conn.prepareStatement(
                 "INSERT into circles " +
                         "(name, color, team_count, tasks_started, tasks_completed, raised_monthly, raised_total) " +
-                        "VALUES('Circle " + circleId + "', 0, 1, 0, 0, 0, 0)")){
+                        "VALUES('Circle " + circleId + "', 0, 1, 0, 0, 0, 0)")) {
 //            stmt.setString(1, "Circle " + circleId);
 //            stmt.setInt(2, 0);//color 0
 //            stmt.setInt(3, 1);//teamcount of 1
@@ -50,18 +42,17 @@ public class CircleManager {
         return circleId;
     }
 
-
-    public int getTotalDonations(int circleId) throws Exception{
+    @Override
+    public int getTotalDonations(int circleId) throws Exception {
         var conn = DataSource.getConnection();
-        try(var stmt = conn.prepareStatement("SELECT raised_total FROM circles where id=?")){
+        try (var stmt = conn.prepareStatement("SELECT raised_total FROM circles where id=?")) {
             stmt.setInt(1, circleId);
             var query = stmt.executeQuery();
-            if(query.next()){
+            if (query.next()) {
                 int total = query.getInt(1);
                 return total;
             }
         }
         return 0;
     }
-
 }

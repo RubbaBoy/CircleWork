@@ -14,4 +14,10 @@ public class Row {
         return (T) map.get(index);
     }
 
+    @Override
+    public String toString() {
+        return "Row{" +
+                map +
+                '}';
+    }
 }

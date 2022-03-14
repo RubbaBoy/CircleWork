@@ -1,9 +1,11 @@
 package com.circlework.handlers;
 
-import com.circlework.AuthManager;
-import com.circlework.CircleManager;
+import com.circlework.manager.AuthService;
+import com.circlework.manager.CircleService;
+import com.circlework.manager.UserService;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.inject.Inject;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.slf4j.Logger;
@@ -15,21 +17,37 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Handler;
 
 public abstract class BasicHandler implements HttpHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BasicHandler.class);
 
-    AuthManager authManager;
-    CircleManager circleManager;
+    AuthService authService;
+    CircleService circleService;
+    UserService userService;
+
+    @Inject
+    public void setAuthService(AuthService authService) {
+        this.authService = authService;
+    }
+
+    @Inject
+    public void setCircleService(CircleService circleService) {
+        this.circleService = circleService;
+    }
+
+    @Inject
+    public void setUserService(UserService userService) {
+        this.userService = userService;
+    }
 
     final Map<Path<?>, Handler> paths = new HashMap<>();
 
-    BasicHandler(AuthManager authManager, CircleManager circleManager) {
-        this.authManager = authManager;
-        this.circleManager = circleManager;
-    }
+//    @Inject
+//    BasicHandler(AuthService authService, CircleService circleService) {
+//        this.authService = authService;
+//        this.circleService = circleService;
+//    }
 
     public HttpHandler init() {
         registerPaths();
@@ -56,7 +74,7 @@ public abstract class BasicHandler implements HttpHandler {
             if (entry.length > 1) {
                 LOGGER.debug("before: {} after: {}", entry[1], URLDecoder.decode(entry[1], StandardCharsets.UTF_8));
                 result.put(entry[0], URLDecoder.decode(entry[1], StandardCharsets.UTF_8));
-            } else {
+            } else if (entry.length == 1) {
                 result.put(entry[0], "");
             }
         }
@@ -75,7 +93,7 @@ public abstract class BasicHandler implements HttpHandler {
         try {
             if (exchange.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
                 exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-                exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type,Authorization");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type,Authorization,token");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 exchange.sendResponseHeaders(204, -1);
                 return;
@@ -89,17 +107,17 @@ public abstract class BasicHandler implements HttpHandler {
 
             var entryOptional = paths.entrySet().stream().filter(entry -> {
                 var entryPath = entry.getKey();
-                System.out.println("requested method: " + method + " entry path: " + entryPath.method);
-                System.out.println(Arrays.toString(entryPath.path));
-                System.out.println(Arrays.toString(strippedPath));
-                System.out.println(entryPath.path.length);
-                System.out.println(strippedPath.length);
-                LOGGER.info("{} && {}", entryPath.method.equalsIgnoreCase(method), Arrays.equals(entryPath.path, strippedPath));
+//                System.out.println("requested method: " + method + " entry path: " + entryPath.method);
+//                System.out.println(Arrays.toString(entryPath.path));
+//                System.out.println(Arrays.toString(strippedPath));
+//                System.out.println(entryPath.path.length);
+//                System.out.println(strippedPath.length);
+//                LOGGER.info("{} && {}", entryPath.method.equalsIgnoreCase(method), Arrays.equals(entryPath.path, strippedPath));
                 return entryPath.method.equalsIgnoreCase(method) && Arrays.equals(entryPath.path, strippedPath);
             }).findFirst();
 
             if (entryOptional.isEmpty()) {
-                System.out.println("Empty!");
+//                System.out.println("Empty!");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type,Authorization");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
@@ -107,7 +125,7 @@ public abstract class BasicHandler implements HttpHandler {
                 return;
             }
 
-            System.out.println("ok");
+//            System.out.println("ok");
 
             try {
             var entry = entryOptional.get();
@@ -117,22 +135,22 @@ public abstract class BasicHandler implements HttpHandler {
 
             if (method.equalsIgnoreCase("GET")) {
                 var map = queryToMap(exchange.getRequestURI().getRawQuery());
-                LOGGER.debug("map = {}", map);
+//                LOGGER.debug("map = {}", map);
                 bodyString = queryGsonBuilder.toJson(map);
             } else {
                 bodyString = new String(exchange.getRequestBody().readAllBytes());
             }
 
-                LOGGER.debug("bodyString = {}", bodyString);
+//                LOGGER.debug("bodyString = {}", bodyString);
 
             var stuff = entry.getValue();
-            LOGGER.debug("111 {}", entry.getKey().clazz().getCanonicalName());
+//            LOGGER.debug("111 {}", entry.getKey().clazz().getCanonicalName());
             var json = gsonBuilder.fromJson(bodyString, entry.getKey().clazz());
-                LOGGER.debug("222");
+//                LOGGER.debug("222");
 
 
                 var tokenHeader = exchange.getRequestHeaders().get("token");
-                LOGGER.debug("ayyy");
+//                LOGGER.debug("ayyy");
                 var token = (tokenHeader != null && !tokenHeader.isEmpty()) ? tokenHeader.get(0) : null;
 
                 exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");

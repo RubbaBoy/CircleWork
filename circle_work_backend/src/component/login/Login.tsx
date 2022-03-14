@@ -15,6 +15,7 @@ export const Login = (props: LoginProps) => {
 
     function login() {
         fetchApi('auth/login', {
+            method: 'POST',
             body: JSON.stringify({
                 'username': usernameRef.current?.value ?? '',
                 'password': passwordRef.current?.value ?? ''

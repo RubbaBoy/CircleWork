@@ -21,6 +21,7 @@ dependencies {
 
     implementation 'com.braintreepayments.gateway:braintree-java:3.14.0'
     implementation 'org.jsoup:jsoup:1.14.3'
+    implementation 'com.google.inject:guice:5.1.0'
 
 }
 

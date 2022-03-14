@@ -70,6 +70,8 @@ export const WeekView = () => {
         })
     }, [])
 
+    console.log(getDays());
+
     return <Row xs={12} className="WeekView">
         <h5>March 14-21</h5>
         <Card>
@@ -77,7 +79,7 @@ export const WeekView = () => {
                 {error != undefined ? <p className="error">{error}</p> :
                     getDays().map((dayTime, i) => (
                         <Fragment>
-                            <div className="day">
+                            <div className="day" key={dayTime.weekday}>
                                 <h5 className="day-name">{dayTime.weekday}</h5>
                                 <ul className="tasks">
                                     {goals.get(dayTime.date)?.map(goal =>

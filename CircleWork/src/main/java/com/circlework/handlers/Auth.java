@@ -1,20 +1,15 @@
 package com.circlework.handlers;
 
-import com.circlework.AuthManager;
-import com.circlework.CircleManager;
+import com.circlework.manager.AuthService;
+import com.circlework.manager.CircleService;
 import com.circlework.DataSource;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
 public class Auth extends BasicHandler {
-
-    public Auth(AuthManager authManager, CircleManager circleManager){
-        super(authManager, circleManager);
-    }
 
     @Override
     public void registerPaths() {
@@ -25,14 +20,14 @@ public class Auth extends BasicHandler {
     void login(HttpExchange exchange, String[] path, String method, LoginRequest request, String token) throws Exception {
 
             var conn = DataSource.getConnection();
-            try(var stmt = conn.prepareStatement("SELECT circle_id WHERE username = ?, password = ?")){
+            try(var stmt = conn.prepareStatement("SELECT circle_id WHERE username = ? AND password = ?")){
                 stmt.setString(1, request.username);
                 stmt.setString(2,request.password);
                 var query = stmt.executeQuery();
                 if(query.next()){
                     var circleId = query.getInt(1);
                     var uuid = UUID.randomUUID().toString();
-                    authManager.addToken(uuid, circleId);
+                    authService.addToken(uuid, circleId);
                     setBody(exchange, new LoginResponse(uuid, circleId), 200);
                     return;
                 }
@@ -50,17 +45,15 @@ public class Auth extends BasicHandler {
             stmt.setInt(3, 0);
 
             if(circleId == -1){//if the user provides no preexisting circle
-                circleId = circleManager.createCircle();//create a new circle for them
+                circleId = circleService.createCircle();//create a new circle for them
             }
 
-            stmt.setInt(3, circleId);
+            stmt.setInt(4, circleId);
             stmt.executeUpdate();
             var uuid = UUID.randomUUID().toString();
-            authManager.addToken(uuid, circleId);//add the user to the authenticator
+            authService.addToken(uuid, circleId);//add the user to the authenticator
 
             setBody(exchange, new RegisterResponse(uuid, circleId), 200);
-            return;
-
         }
         catch(Exception e){
             e.printStackTrace();
