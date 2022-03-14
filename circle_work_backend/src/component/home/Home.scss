@@ -116,22 +116,22 @@ $gold: #FFD700;
         display: block;
     }
 
-    .sidebar {
-        //position: absolute;
-        position: relative;
-        //top: 10vh;
-        height: 100%;
-        width: calc(100% - 48px);
-        margin: 24px;
-        max-width: 250px;
-        background: currentColor;
-        color: colors.$blue;
+    .sidebar-incomplete {
+        ////position: absolute;
+        //position: relative;
+        ////top: 10vh;
+        //height: 100%;
+        //width: calc(100% - 48px);
+        //margin: 24px;
+        //max-width: 250px;
+        //background: currentColor;
+        //color: colors.$blue;
 
-        margin-top: 0; // ??
-
-        &.upside-down {
-            height: max(100% - 350px, 100vh - 250px);
-        }
+        //margin-top: 0; // ??
+        //
+        //&.upside-down {
+        //    height: max(100% - 350px, 100vh - 250px);
+        //}
 
         .logo-parent {
             position: relative;

@@ -157,13 +157,27 @@ public abstract class BasicHandler implements HttpHandler {
 
                 stuff.handle(exchange, path, method, json, token);
             } catch (Exception e) {
-                e.printStackTrace();
-                setBody(exchange, Map.of("error", e.getMessage()), 500);
+                handleError(exchange, e);
             }
 
         } catch (Exception e) {
             // 500
             e.printStackTrace();
+        }
+    }
+
+    public void handleError(HttpExchange exchange, Exception e) {
+        handleError(exchange, e, e.getMessage());
+    }
+
+    public void handleError(HttpExchange exchange, Exception e, String message) {
+        LOGGER.error("An exception occurred during a request to: {}", exchange.getRequestURI().getPath(), e);
+
+        try {
+            setBody(exchange, Map.of("error", message), 500);
+        } catch (IOException ex) {
+            LOGGER.error("An error occurred while setting an exception response body", ex);
+            exchange.close();
         }
     }
 

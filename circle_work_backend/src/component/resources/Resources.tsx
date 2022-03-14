@@ -98,7 +98,7 @@ export const Resources = () => {
 
             <Row className="Goals mx-0">
                 {someBody(
-                    <div className="sidebar" style={{color: `#${convertColor(category?.color ?? 0) ?? '425dff'}`}}>
+                    <div className="sidebar-incomplete upside-down" style={{color: `#${convertColor(category?.color ?? 0) ?? '425dff'}`}}>
                         <div className="bottom-round"></div>
                     </div>,
                     <Fragment>

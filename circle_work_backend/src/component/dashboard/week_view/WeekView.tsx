@@ -56,7 +56,7 @@ export const WeekView = () => {
 
             for (let goal of goals) {
                 let goalDate = new Date(goal.due_date)
-                let dateNum = goalDate.getDate()
+                let dateNum = goalDate.getDate() + 1
                 if (goalDate >= lower && goalDate <= upper) {
                     if (!dateMap.has(dateNum)) {
                         dateMap.set(dateNum, [])

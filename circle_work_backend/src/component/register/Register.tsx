@@ -1,7 +1,7 @@
 import React, {createRef, Fragment, useEffect, useState} from 'react'
 import './Register.scss'
 import {MiddleContent} from "../middle_content/MiddleContent";
-import {Button, Modal, ModalBody, ModalHeader, ModalTitle, Row} from "react-bootstrap";
+import {Button, Form, Modal, ModalBody, ModalHeader, ModalTitle, Row} from "react-bootstrap";
 import {fetchApi, fetchAuthed} from "../../logic/request-helper";
 import DropIn from "braintree-web-drop-in-react";
 import {Dropin} from "braintree-web-drop-in";
@@ -78,29 +78,31 @@ export const Register = (props: RegisterProps) => {
     return (
         <Row className="Login d-flex justify-content-center">
             <MiddleContent>
-                <Row>
-                    <input ref={usernameRef} name="username" type="text"/>
-                </Row>
+                <Form>
+                    <Form.Group>
+                        <Form.Label>Username</Form.Label>
+                        <Form.Control ref={usernameRef} name="username" type="text"/>
+                    </Form.Group>
 
-                <Row className={"pt-2"}>
-                    <input ref={passwordRef} name="password" type="password"/>
-                </Row>
+                    <Form.Group className="pt-2">
+                        <Form.Label>Password</Form.Label>
+                        <Form.Control ref={passwordRef} name="password" type="password"/>
+                    </Form.Group>
 
-                <Row className={"pt-2"}>
-                    <input ref={passwordRef} name="password" type="password" placeholder="Circle Code (optional)"/>
-                </Row>
+                    <Form.Group className="pt-2">
+                        <Form.Label>Circle Code</Form.Label>
+                        <Form.Control ref={codeRef} name="code" type="text" placeholder="Circle Code (optional)"/>
+                    </Form.Group>
 
-                <Row className={"pt-3"}>
-                    <Button onClick={() => register(false)}>Create Circle</Button>
-                </Row>
-
-                <Row className={"pt-3"}>
-                    <Button onClick={() => register(true)}>Join Circle</Button>
-                </Row>
+                    <Form.Group className={"pt-3"}>
+                        <Button onClick={() => register(false)}>Create Circle</Button>
+                        <Button className="mx-2" onClick={() => register(true)}>Join Circle</Button>
+                    </Form.Group>
+                </Form>
 
                 <Fragment>
                     {error &&
-                        <p className="error">Invalid credentials!</p>}
+                        <p className="error pt-2">Invalid credentials!</p>}
                 </Fragment>
             </MiddleContent>
 

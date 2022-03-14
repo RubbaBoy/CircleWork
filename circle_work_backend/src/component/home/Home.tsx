@@ -53,7 +53,7 @@ export const Home = (props: HomeProps) => {
             <Col xs={2} className="left-col">
                 <div className="spacer"></div>
 
-                <div className="sidebar">
+                <div className="sidebar-incomplete">
                     <div className="logo-parent"></div>
 
                     <div className="link-container">

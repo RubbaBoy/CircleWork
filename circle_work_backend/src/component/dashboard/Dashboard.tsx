@@ -11,6 +11,7 @@ import {GlobalStats} from "./global_stats/GlobalStats";
 import {CircleStats} from "./circle_stats/CircleStats";
 import {WeekView} from "./week_view/WeekView";
 import {useNavigate} from "react-router";
+import { Calendar } from 'react-date-range';
 
 interface AddGoalProps {
     show: boolean
@@ -48,6 +49,7 @@ const AddGoalModal = (props: AddGoalProps) => {
     let privateRef = createRef<HTMLInputElement>()
     let categoryRef = createRef<HTMLSelectElement>()
     const [showGoalToast, setShowGoalToast] = useState(false);
+    const [dueDate, setDueDate] = useState<Date>(new Date())
     const [name, setName] = useState<string>();
 
     const [error, setError] = useState<string | undefined>()
@@ -62,6 +64,10 @@ const AddGoalModal = (props: AddGoalProps) => {
         props.onHide()
     }
 
+    function formatDate(date: Date): string {
+        return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
+    }
+
     function addGoal() {
         let category = categoryRef.current?.value
         if (category == '-1') {
@@ -69,17 +75,23 @@ const AddGoalModal = (props: AddGoalProps) => {
             return
         }
 
+        if (dueDate == undefined) {
+            setError('Please select a due date')
+            return
+        }
+
         setName(nameRef.current?.value ?? '')
 
         setError(undefined)
 
-        fetchAuthed('goal/add', {
+        fetchAuthed('goals/add', {
             method: 'POST',
             body: JSON.stringify({
-                'private': privateRef.current?.checked,
-                'goalname': nameRef.current?.value,
-                'goalbody': descRef.current?.value,
-                'category': categoryRef.current?.value
+                'is_private': privateRef.current?.checked,
+                'goal_name': nameRef.current?.value,
+                'goal_body': descRef.current?.value,
+                'category': categoryRef.current?.value,
+                'due_date': formatDate(dueDate),
             })
         }).then(async res => {
             let json = await res.json()
@@ -137,6 +149,13 @@ const AddGoalModal = (props: AddGoalProps) => {
                                 {categories.map(category => <option value={`${category.id}`}>{category.name}</option>)}
                             </Form.Select>
                         </Form.Group>
+                        <Form.Group>
+                            <span>Completion date</span><br/>
+                            <Calendar
+                                date={dueDate}
+                                onChange={setDueDate}
+                            />
+                        </Form.Group>
                         <Form.Group className="mb-3" controlId="formBasicCheckbox">
                             <Form.Check ref={privateRef} type="checkbox" label="Is this a private goal? (Not counted towards circles)"/>
                         </Form.Group>
@@ -166,7 +185,7 @@ export const Dashboard = () => {
 
             <Row className="Dashboard mx-0">
                 {someBody(
-                    <div className="sidebar upside-down">
+                    <div className="sidebar-incomplete upside-down">
                         <div className="bottom-round"></div>
 
                         <div className="vert-text">

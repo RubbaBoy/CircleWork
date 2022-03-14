@@ -1,7 +1,7 @@
 import React, {createRef, Fragment, useState} from 'react'
 import './Login.scss'
 import {MiddleContent} from "../middle_content/MiddleContent";
-import {Button, Row} from "react-bootstrap";
+import {Button, Form, Row} from "react-bootstrap";
 import {fetchApi} from "../../logic/request-helper";
 
 interface LoginProps {
@@ -40,21 +40,25 @@ export const Login = (props: LoginProps) => {
     return (
         <Row className="Login d-flex justify-content-center">
             <MiddleContent>
-                <Row>
-                    <input ref={usernameRef} name="username" type="text"/>
-                </Row>
+                <Form>
+                    <Form.Group>
+                        <Form.Label>Username</Form.Label>
+                        <Form.Control ref={usernameRef} type="text"/>
+                    </Form.Group>
 
-                <Row className={"pt-2"}>
-                    <input ref={passwordRef} name="password" type="password"/>
-                </Row>
+                    <Form.Group className="pt-2">
+                        <Form.Label>Password</Form.Label>
+                        <Form.Control ref={passwordRef} type="password"/>
+                    </Form.Group>
 
-                <Row className={"pt-3"}>
-                    <Button onClick={() => login()}>Login</Button>
-                </Row>
+                    <Form.Group className={"pt-3"}>
+                        <Button onClick={() => login()}>Login</Button>
+                    </Form.Group>
+                </Form>
 
                 <Fragment>
                     {error &&
-                        <p className="error">Invalid credentials!</p>}
+                        <p className="error pt-2">Invalid credentials!</p>}
                 </Fragment>
             </MiddleContent>
         </Row>

@@ -1,34 +1,28 @@
 package com.circlework.handlers;
 
-import com.circlework.manager.AuthService;
-import com.circlework.manager.CircleService;
 import com.circlework.Objects;
 import com.circlework.Row;
 import com.circlework.SQLUtility;
 import com.sun.net.httpserver.HttpExchange;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 public class Charities extends BasicHandler {
 
     @Override
     public void registerPaths() {
-        registerPath(new String[] {"list"}, "GET", Objects.Empty.class, this::list);
+        registerPath(new String[]{"list"}, "GET", Objects.Empty.class, this::list);
     }
 
-    void list(HttpExchange exchange, String[] path, String method, Objects.Empty request, String token) throws IOException {
-        try{
-            var feedRows = SQLUtility.executeQuery("SELECT id, name, image, link, raised_monthly, raised_total FROM charities");
+    void list(HttpExchange exchange, String[] path, String method, Objects.Empty request, String token) throws Exception {
+        var feedRows = SQLUtility.executeQuery("SELECT id, name, image, link, raised_monthly, raised_total FROM charities");
 
-            List<Objects.Charity> charityList = new LinkedList<>();
+        List<Objects.Charity> charityList = new LinkedList<>();
 
-            for(Row curRow : feedRows){
-                charityList.add(new Objects.Charity(curRow.get(0), curRow.get(1), curRow.get(2), curRow.get(3), curRow.get(4), curRow.get(5) ));
-            }
+        for (Row curRow : feedRows) {
+            charityList.add(new Objects.Charity(curRow.get(0), curRow.get(1), curRow.get(2), curRow.get(3), curRow.get(4), curRow.get(5)));
+        }
 
 //            int id = goalRow.get(0);
 //            int ownerId = goalRow.get(1);
@@ -38,9 +32,6 @@ public class Charities extends BasicHandler {
 //            int approvalCount = goalRow.get(5);
 //            int category = goalRow.get(6);
 
-            setBody(exchange, charityList, 200);
-        }catch (SQLException e){
-            setBody(exchange, Map.of("message", "error"), 500);
-        }
+        setBody(exchange, charityList, 200);
     }
 }

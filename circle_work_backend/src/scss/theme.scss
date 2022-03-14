@@ -1,0 +1,40 @@
+@use "src/scss/colors" as colors;
+
+.sidebar-incomplete {
+    //position: absolute;
+    position: relative;
+    //top: 10vh;
+    height: 100%;
+    width: calc(100% - 48px);
+    margin: 24px;
+    max-width: 250px;
+    background: currentColor;
+    color: colors.$blue;
+
+    &.upside-down {
+        height: max(100% - 350px, 100vh - 250px);
+    }
+
+
+    top: 0;
+    margin-top: 0;
+
+    .bottom-round {
+        width: 100%;
+        aspect-ratio: 1;
+        position: absolute;
+        bottom: 0;
+
+        &::after {
+            width: 100%;
+            aspect-ratio: 1;
+            background: currentColor;
+            border-radius: 100%;
+            display: block;
+            content: '';
+            position: absolute;
+            bottom: -50%;
+            z-index: 1;
+        }
+    }
+}

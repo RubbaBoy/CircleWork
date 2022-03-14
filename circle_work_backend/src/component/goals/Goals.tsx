@@ -17,7 +17,7 @@ import {fetchAuthed} from "../../logic/request-helper";
  */
 function reformatDate(dateString: string): string {
     let date = new Date(Date.parse(dateString))
-    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
+    return `${date.getMonth() + 1}/${date.getDate() + 1}/${date.getFullYear()}`
 }
 
 export const Goals = () => {
@@ -82,7 +82,7 @@ export const Goals = () => {
 
             <Row className="Goals mx-0">
                 {someBody(
-                    <div className="sidebar upside-down">
+                    <div className="sidebar-incomplete upside-down">
                         <div className="bottom-round"></div>
                     </div>,
                     <Fragment>

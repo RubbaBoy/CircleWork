@@ -33,7 +33,7 @@ export const Feed = () => {
     }, [])
 
     function approve(goal: Goal) {
-        fetchAuthed('goal/approve', {method: 'POST', body: JSON.stringify({
+        fetchAuthed('goals/approve', {method: 'POST', body: JSON.stringify({
                 'goal_id': goal.id,
             })}).then(async res => {
             let json = await res.json()
@@ -62,7 +62,7 @@ export const Feed = () => {
                 <Card.Body className={"body"}>
                     <div className={"left"}>
                         <span className="title">{goal.owner_name} completed a task!</span>
-                        <p className="body">{goal.owner_name} completed: ${goal.goal_name}</p>
+                        <p className="body">{goal.owner_name} completed: {goal.goal_name}</p>
                     </div>
                     <div className={"right"}>
                         <svg xmlns="http://www.w3.org/2000/svg" className="approve" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000" onClick={() => approve(goal)}>

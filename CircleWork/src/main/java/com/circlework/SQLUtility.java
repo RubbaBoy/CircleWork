@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -25,6 +26,19 @@ public class SQLUtility {
 //        executeQuerySingle("", new int[] {0, 0, 0, 0, 0});
 //    }
 
+    public static void executeUpdate(String update, Object... args) throws SQLException {
+        try(var conn = DataSource.getConnection();
+            var stmt = conn.prepareStatement(update)) {
+            int index = 1;
+
+            for (Object cur : args) {
+                stmt.setObject(index++, cur);
+            }
+
+            stmt.executeUpdate();
+        }
+    }
+
     public static Row executeQuerySingle(String query, Object... args) throws SQLException{
         // thwo SQLException if row.length < 1
         if(args.length < 1){
@@ -36,25 +50,13 @@ public class SQLUtility {
     }
 
     public static List<Row> executeQuery(String query, Object... args) throws SQLException {
-        /*
-         * - prepare the statement
-         * - iterate over args, do PreparedStatement#setObject(index+1, args[index])
-         * - execute it
-         * - collect results via while loop & ResultSet#getObject and put each row in a Row
-         * - return the rows
-         */
-
-//        if(args.length < 1){
-//            throw new SQLException();
-//        }
-
         List<Row> rows = new LinkedList<>();//list for storing the created rows
 
         try(var conn = DataSource.getConnection();
             var stmt = conn.prepareStatement(query)){
             int index = 1;
 
-            for(Object cur: args){
+            for(Object cur : args){
                 stmt.setObject(index++, cur);
             }
 

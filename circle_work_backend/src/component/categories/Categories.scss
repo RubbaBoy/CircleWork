@@ -1,0 +1,22 @@
+@use "src/scss/colors" as colors;
+
+.Categories {
+    .first-row {
+        margin-top: 10vh;
+
+        .list-row {
+            margin-top: -16px;
+
+            .category {
+                margin-top: 16px;
+                cursor: pointer;
+
+                transition: box-shadow 100ms ease-in 0s;
+
+                &:hover {
+                    transition: box-shadow 100ms ease-out 0s;
+                }
+            }
+        }
+    }
+}

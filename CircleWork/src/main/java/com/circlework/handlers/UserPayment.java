@@ -33,39 +33,32 @@ public class UserPayment extends BasicHandler {
 
         var user = authService.getUserFromToken(token).orElseThrow();
 
-        try {
+        BraintreeGateway gateway = new BraintreeGateway(
+                Environment.SANDBOX,
+                "f6rwhjv3cwnydzx8",
+                "2732nvxdjdyyy2m3",
+                "b94b8326fd986178b101d56a51ea98dc"
+        );
 
-            BraintreeGateway gateway = new BraintreeGateway(
-                    Environment.SANDBOX,
-                    "f6rwhjv3cwnydzx8",
-                    "2732nvxdjdyyy2m3",
-                    "b94b8326fd986178b101d56a51ea98dc"
-            );
+        TransactionRequest request = new TransactionRequest()
+                .amount(MONTHLY_CHARGE)//$5 per month
+                .paymentMethodNonce(body.nonce)
+                .options()//TODO possibly set options for payments
+                .done();
 
-            TransactionRequest request = new TransactionRequest()
-                    .amount(MONTHLY_CHARGE)//$5 per month
-                    .paymentMethodNonce(body.nonce)
-                    .options()//TODO possibly set options for payments
-                    .done();
+        Result<Transaction> result = gateway.transaction().sale(request);
 
-            Result<Transaction> result = gateway.transaction().sale(request);
+        if (result.isSuccess()) {
+            Transaction transaction = result.getTarget();
+            setBody(exchange, new UserPaymentResponse(MONTHLY_CHARGE), 200);
+        } else if (result.getTransaction() != null) {
+            Transaction transaction = result.getTransaction();
 
-            if (result.isSuccess()) {
-                Transaction transaction = result.getTarget();
-                setBody(exchange, new UserPaymentResponse(MONTHLY_CHARGE), 200);
-            } else if (result.getTransaction() != null) {
-                Transaction transaction = result.getTransaction();
+            System.out.println("error processing transaction");
 
-                System.out.println("error processing transaction");
-
-                setBody(exchange, Map.of("message", "error processing payment"), 402);//error processing payment
-            } else {
-                setBody(exchange, Map.of("message", "error processing payment"), 402);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            setBody(exchange, Map.of("message", "error"), 500);
+            setBody(exchange, Map.of("message", "error processing payment"), 402);//error processing payment
+        } else {
+            setBody(exchange, Map.of("message", "error processing payment"), 402);
         }
 
     }

@@ -8,7 +8,6 @@ import com.sun.net.httpserver.HttpExchange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,66 +27,61 @@ public class Circles extends BasicHandler {
         registerPath(new String[]{"feed"}, "GET", Objects.Empty.class, this::feed);
         registerPath(new String[]{"donation"}, "GET", Objects.Empty.class, this::donation);
     }
-/*
-    void addUserBalance(HttpExchange exchange, String[] path, String method, AddBalanceRequest request, String token) throws Exception {
-        if (!authService.validateToken(token)) {
-            setBody(exchange, Map.of("message", "invalid authtoken"), 418);
-            return;
+
+    /*
+        void addUserBalance(HttpExchange exchange, String[] path, String method, AddBalanceRequest request, String token) throws Exception {
+            if (!authService.validateToken(token)) {
+                setBody(exchange, Map.of("message", "invalid authtoken"), 418);
+                return;
+            }
+
+            var userId = authService.getUserFromToken(token).orElseThrow();
+
+            try {
+
+                var balanceRow = SQLUtility.executeQuerySingle(
+                        "UPDATE users SET approval_count=goals.approval_count+1 RETURNING approval_count");
+            } catch (Exception e) {
+                setBody(exchange, Map.of("message", "invalid token"), 418);//give teapot for invalid token
+            }
         }
 
-        var userId = authService.getUserFromToken(token).orElseThrow();
+        void addCircleBalance(HttpExchange exchange, String[] path, String method, AddBalanceRequest request, String token) throws Exception {
+            if (!authService.validateToken(token)) {
+                setBody(exchange, Map.of("message", "invalid authtoken"), 418);
+                return;
+            }
 
-        try {
+            var userId = authService.getUserFromToken(token).orElseThrow();
 
-            var balanceRow = SQLUtility.executeQuerySingle(
-                    "UPDATE users SET approval_count=goals.approval_count+1 RETURNING approval_count");
-        } catch (Exception e) {
-            setBody(exchange, Map.of("message", "invalid token"), 418);//give teapot for invalid token
+            try {
+
+                var circleRow = SQLUtility.executeQuerySingle("SELECT circle_id FROM users WHERE current"); // TODO: What is `current`??
+
+                var balanceRow = SQLUtility.executeQuerySingle(
+                        "UPDATE users SET approval_count=goals.approval_count+1 RETURNING approval_count");
+            } catch (Exception e) {
+                setBody(exchange, Map.of("message", "invalid token"), 418);//give teapot for invalid token
+            }
         }
-    }
-
-    void addCircleBalance(HttpExchange exchange, String[] path, String method, AddBalanceRequest request, String token) throws Exception {
-        if (!authService.validateToken(token)) {
-            setBody(exchange, Map.of("message", "invalid authtoken"), 418);
-            return;
-        }
-
-        var userId = authService.getUserFromToken(token).orElseThrow();
-
-        try {
-
-            var circleRow = SQLUtility.executeQuerySingle("SELECT circle_id FROM users WHERE current"); // TODO: What is `current`??
-
-            var balanceRow = SQLUtility.executeQuerySingle(
-                    "UPDATE users SET approval_count=goals.approval_count+1 RETURNING approval_count");
-        } catch (Exception e) {
-            setBody(exchange, Map.of("message", "invalid token"), 418);//give teapot for invalid token
-        }
-    }
-*/
+    */
     void completionLeaderboard(HttpExchange exchange, String[] path, String method, LeaderboardRequest request, String token) throws Exception {
         if (!authService.validateToken(token)) {
             setBody(exchange, Map.of("message", "invalid authtoken"), 418);
             return;
         }
 
-        try {
+        List<Objects.Circle> circlesList = new LinkedList<>();
+        var leaderBoardRow = SQLUtility.executeQuery("SELECT id, name, color, team_count, raised_monthly, raised_total," +
+                " tasks_started, tasks_completed  from circles ORDER BY COALESCE(tasks_completed / NULLIF(tasks_started, 0), 0) LIMIT 5");
 
-            List<Objects.Circle> circlesList = new LinkedList<>();
-            var leaderBoardRow = SQLUtility.executeQuery("SELECT id, name, color, team_count, raised_monthly, raised_total," +
-                    " tasks_started, tasks_completed  from circles ORDER BY COALESCE(tasks_completed / NULLIF(tasks_started, 0), 0) LIMIT 5");
+        for (Row curRow : leaderBoardRow) {
+            circlesList.add(new Objects.Circle(curRow.get(0), curRow.get(1), curRow.get(2), curRow.get(3), curRow.get(4),
+                    curRow.get(5), curRow.get(6), curRow.get(7)));
 
-            for (Row curRow : leaderBoardRow) {
-                circlesList.add(new Objects.Circle(curRow.get(0), curRow.get(1), curRow.get(2), curRow.get(3), curRow.get(4),
-                        curRow.get(5), curRow.get(6), curRow.get(7)));
-
-            }
-
-            setBody(exchange, circlesList, 200);
-        } catch (Exception e) {
-            e.printStackTrace();
-            setBody(exchange, Map.of("message", "error"), 500);
         }
+
+        setBody(exchange, circlesList, 200);
     }
 
     void donationLeaderboard(HttpExchange exchange, String[] path, String method, LeaderboardRequest request,
@@ -98,41 +92,27 @@ public class Circles extends BasicHandler {
             return;
         }
 
-        try {
+        List<Objects.Circle> circlesList = new LinkedList<>();
+        var leaderBoardRow = SQLUtility.executeQuery("SELECT id, name, color, team_count, raised_monthly, raised_total," +
+                " tasks_started, tasks_completed  from circles ORDER BY (raised_total) LIMIT 5");
 
-            List<Objects.Circle> circlesList = new LinkedList<>();
-            var leaderBoardRow = SQLUtility.executeQuery("SELECT id, name, color, team_count, raised_monthly, raised_total," +
-                    " tasks_started, tasks_completed  from circles ORDER BY (raised_total) LIMIT 5");
+        for (Row curRow : leaderBoardRow) {
+            circlesList.add(new Objects.Circle(curRow.get(0), curRow.get(1), curRow.get(2), curRow.get(3), curRow.get(4),
+                    curRow.get(5), curRow.get(6), curRow.get(7)));
 
-            for (Row curRow : leaderBoardRow) {
-                circlesList.add(new Objects.Circle(curRow.get(0), curRow.get(1), curRow.get(2), curRow.get(3), curRow.get(4),
-                        curRow.get(5), curRow.get(6), curRow.get(7)));
-
-            }
-
-            setBody(exchange, circlesList, 200);
-        } catch (Exception e) {
-            e.printStackTrace();
-            setBody(exchange, Map.of("message", "error"), 500);
         }
+
+        setBody(exchange, circlesList, 200);
     }
 
 
-    void users(HttpExchange exchange, String[] path, String method, UserRequest request, String token) throws IOException {
+    void users(HttpExchange exchange, String[] path, String method, UserRequest request, String token) throws Exception {
         if (!authService.validateToken(token)) {
             setBody(exchange, Map.of("message", "invalid authtoken"), 418);
             return;
         }
 
-        try {
-            // TODO max what the fuck this returns all users
-
-            setBody(exchange, new UserResponse(getUsers(request.circle_id)), 200);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            setBody(exchange, Map.of("message", "error"), 500);
-        }
+        setBody(exchange, new UserResponse(getUsers(request.circle_id)), 200);
     }
 
     void feed(HttpExchange exchange, String[] path, String method, Objects.Empty request, String token) throws Exception {
@@ -146,41 +126,35 @@ public class Circles extends BasicHandler {
         var userId = authService.getUserFromToken(token).orElseThrow();
         var user = userService.getUser(userId).get();
 
-        try {
-            //var stmt = conn.prepareStatement("SELECT id, owner, private, category, goal_name, goal_body, approval_count  FROM goals WHERE circle_id = ?")){
-            //.setString(1, ""+request.circle_id); //Turns circle id into a string to work with the statement
+        //var stmt = conn.prepareStatement("SELECT id, owner, private, category, goal_name, goal_body, approval_count  FROM goals WHERE circle_id = ?")){
+        //.setString(1, ""+request.circle_id); //Turns circle id into a string to work with the statement
 
-            var usersList = getUsers(user.circle_id());
+        var usersList = getUsers(user.circle_id());
 
-            List<Objects.Goal> goalList = new LinkedList<>();
+        List<Objects.Goal> goalList = new LinkedList<>();
 
-            for (Objects.User userObject : usersList) {
-                var feedRows = SQLUtility.executeQuery("SELECT id, private, category, goal_name, goal_body, due_date, approval_count FROM goals WHERE approval_count > 0 AND owner = ?", userObject.id());
+        for (Objects.User userObject : usersList) {
+            var feedRows = SQLUtility.executeQuery("SELECT id, private, category, goal_name, goal_body, due_date, approval_count FROM goals WHERE approval_count > 0 AND owner = ?", userObject.id());
 
-                //var usernameRow = SQLUtility.executeQuerySingle("SELECT name FROM users WHERE id = ?");
+            //var usernameRow = SQLUtility.executeQuerySingle("SELECT name FROM users WHERE id = ?");
 
 
-                for (Row curRow : feedRows) {
-                    //note password is not retrieveda
-                    goalList.add(new Objects.Goal(curRow.get(0), userObject.id(), userObject.username(), curRow.get(1), curRow.get(2), curRow.get(3), curRow.get(4), curRow.get(5), curRow.get(6)));
-                }
+            for (Row curRow : feedRows) {
+                //note password is not retrieveda
+                goalList.add(new Objects.Goal(curRow.get(0), userObject.id(), userObject.username(), curRow.get(1), curRow.get(2), curRow.get(3), curRow.get(4), curRow.get(5), curRow.get(6)));
             }
-
-            goalList = goalList.parallelStream().filter(goal -> {
-                try {
-                    return SQLUtility.executeQuerySingle("SELECT COUNT(*) FROM approved_goals WHERE user_id=? AND goal_id=?", userId, goal.id()).<Integer>get(0) == 0;
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                    return false;
-                }
-            }).toList();
-
-            setBody(exchange, goalList, 200);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            setBody(exchange, Map.of("message", "error"), 500);
         }
+
+        goalList = goalList.parallelStream().filter(goal -> {
+            try {
+                return SQLUtility.executeQuerySingle("SELECT COUNT(*) FROM approved_goals WHERE user_id=? AND goal_id=?", userId, goal.id()).<Long>get(0) == 0;
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }).toList();
+
+        setBody(exchange, goalList, 200);
 
 
     }
@@ -197,8 +171,8 @@ public class Circles extends BasicHandler {
         var userId = authService.getUserFromToken(token).orElseThrow();
         var user = userService.getUser(userId).get();
 
-        var conn = DataSource.getConnection();
-        try (var stmt = conn.prepareStatement("SELECT raised_total, raised_monthly FROM circles WHERE id = ?")) {
+        try (var conn = DataSource.getConnection();
+             var stmt = conn.prepareStatement("SELECT raised_total, raised_monthly FROM circles WHERE id = ?")) {
             stmt.setInt(1, user.circle_id()); //Turns circle id into a string to work with the statement
 
             var query = stmt.executeQuery();
@@ -210,18 +184,19 @@ public class Circles extends BasicHandler {
                 return;
             }
         }
+
         setBody(exchange, Map.of("message", "error"), 500);
     }
 
     public List<Objects.User> getUsers(int circle_id) throws Exception {
         List<Objects.User> usersList = new LinkedList<>();
 
-
         var userRows = SQLUtility.executeQuery("SELECT id, name, balance, circle_id FROM users WHERE circle_id=?", circle_id);
         for (Row curRow : userRows) {
             //note password is not retrieved
             usersList.add(new Objects.User(curRow.get(0), curRow.get(1), "", curRow.get(2), curRow.get(3)));
         }
+
         return usersList;
     }
 

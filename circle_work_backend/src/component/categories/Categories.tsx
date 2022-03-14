@@ -6,12 +6,15 @@ import {navSideButton} from "../home/Home";
 import {Card, Col, Row} from "react-bootstrap";
 import {someBody} from "../stuff";
 import {useNavigate} from "react-router";
+import './Categories.scss'
+import {convertColor} from "../../logic/utilities";
 
 
 export const Categories = () => {
     const navigate = useNavigate()
 
     const[categories, setCategories] = useState<GoalCategory[]>([])
+    const[hovering, setHovering] = useState<GoalCategory | undefined>()
 
     useEffect(() =>{
         listCategories().then(categories => setCategories(categories))
@@ -23,9 +26,9 @@ export const Categories = () => {
                 {navSideButton('Dashboard', '/dashboard')}
             </div>
 
-            <Row className="Goals mx-0">
+            <Row className="Categories mx-0">
                 {someBody(
-                    <div className="sidebar">
+                    <div className="sidebar-incomplete upside-down">
                         <div className="bottom-round"></div>
                     </div>,
                     <Fragment>
@@ -36,7 +39,7 @@ export const Categories = () => {
                                 <Row xs={12} className="list-row">
                                     {categories.map(category => {
                                         return <Col xs={3}>
-                                            <Card className="categoriessoemthing" onClick={() => navigate('resources/' + category.id)}>
+                                            <Card className="category" onClick={() => navigate('/resources/' + category.id)} style={{...(hovering == category ? {boxShadow: `0 0px 10px #${convertColor(category.color)}`} : null)}} onMouseEnter={() => setHovering(category)} onMouseLeave={() => setHovering(undefined)}>
                                                 <Card.Body>
                                                     <Card.Title className="m-0">
                                                         {category.name}

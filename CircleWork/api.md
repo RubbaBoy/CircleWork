@@ -52,15 +52,15 @@ PUT /api/circles/adduserbalance   //add int cents to the balance of the current 
 
 ## Goals
 
-POST /api/goal/add  //add a new new goal 
-    request:{"private": boolean, "goalname": "", "goalbody": "", "category": ""}
+POST /api/goals/add  //add a new new goal 
+    request:{"private": boolean, "goal_name": "", "goal_body": "", "category": "", "due_date": "yyyy-MM-dd"}
     response: [{"goal_id: ""}]
 
-GET /api/goal/get    //get a goal
+GET /api/goals/get    //get a goal
     request: {"goal_id": ""}
-    response: {"user_id": "", "private": boolean, "goalname": "", "goalbody": "", "approved": "", "category": 0}
+    response: {"user_id": "", "is_private": boolean, "name": "", "body": "", "approved": "", "category": 0}
 
-POST /api/goal/approve      // approve someone else's goal
+POST /api/goals/approve      // approve someone else's goal
     request: {"goal_id": 0}
     response: [{"approved": 0}]
 

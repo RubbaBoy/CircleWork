@@ -22,7 +22,7 @@ public class Donations extends BasicHandler {
         registerPath(new String[] {""}, "GET", Objects.Empty.class, this::get);
     }
 
-    void get(HttpExchange exchange, String[] path, String method, Objects.Empty request, String token) throws IOException {
+    void get(HttpExchange exchange, String[] path, String method, Objects.Empty request, String token) throws Exception {
         if(!authService.validateToken(token)){
             setBody(exchange, Map.of("message", "invalid authtoken"), 418);
             return;
@@ -31,19 +31,15 @@ public class Donations extends BasicHandler {
         int raisedTotal = 0;
         int monthlyTotal = 0;
 
-        try{
             var goalRows = SQLUtility.executeQuery("SELECT rasied_total, raised_monthly from charities");
             for (Row curRow: goalRows){
-                raisedTotal += (int)curRow.get(0);
-                monthlyTotal += (int)curRow.get(1);
+                raisedTotal += curRow.<Integer>get(0);
+                monthlyTotal += curRow.<Integer>get(1);
             }
 
             LOGGER.info("donation listing {}", new DonationResponse(raisedTotal, monthlyTotal));
 
             setBody(exchange, new DonationResponse(raisedTotal, monthlyTotal), 200);
-        }catch (SQLException e){
-            setBody(exchange, Map.of("message", "error"), 500);
-        }
     }
 
     static final class DonationResponse {

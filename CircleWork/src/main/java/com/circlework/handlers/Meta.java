@@ -35,7 +35,6 @@ public class Meta extends BasicHandler {
     }
 
     void getMeta(HttpExchange exchange, String[] path, String method, MetaRequest request, String token) throws IOException {
-        LOGGER.debug("Bruh!");
         final var url = request.url();
         if (cache.containsKey(url)) {
             setBody(exchange, cache.get(url));
@@ -43,7 +42,6 @@ public class Meta extends BasicHandler {
 
         CompletableFuture.runAsync(() -> {
             try {
-                LOGGER.debug("brtuh");
                 var client = HttpClient.newHttpClient();
                 var httpRequest = HttpRequest
                         .newBuilder(new URI(url))
@@ -77,12 +75,7 @@ public class Meta extends BasicHandler {
                 cache.put(request.url(), metaResponse);
                 setBody(exchange, metaResponse);
             } catch (Exception e) {
-                e.printStackTrace();
-                try {
-                    setBody(exchange, Map.of("message", e.getMessage()), 500);
-                } catch (IOException ex) {
-                    throw new UncheckedIOException(ex);
-                }
+                handleError(exchange, e);
             }
         }, executor);
     }

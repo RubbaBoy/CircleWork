@@ -1,7 +1,5 @@
 package com.circlework.handlers;
 
-import com.circlework.manager.AuthService;
-import com.circlework.manager.CircleService;
 import com.circlework.Objects;
 import com.circlework.Row;
 import com.circlework.SQLUtility;
@@ -19,54 +17,43 @@ public class Categories extends BasicHandler {
 
     @Override
     public void registerPaths() {
-        registerPath(new String[] {"list"}, "GET", Objects.Empty.class, this::list);
-        registerPath(new String[] {"resources"}, "GET", ResourcesRequest.class, this::resources);
+        registerPath(new String[]{"list"}, "GET", Objects.Empty.class, this::list);
+        registerPath(new String[]{"resources"}, "GET", ResourcesRequest.class, this::resources);
     }
 
     void list(HttpExchange exchange, String[] path, String method, Objects.Empty body, String token) throws Exception {
         LOGGER.info("listing herre!!!!");
-        if(!authService.validateToken(token)){
+        if (!authService.validateToken(token)) {
             setBody(exchange, Map.of("message", "invalid authtoken"), 418);
             return;
         }
 
-        try{
-            List<Objects.GoalCategory> categories = new LinkedList<>();
-            var categoryRows = SQLUtility.executeQuery("SELECT * from goal_categories");
+        List<Objects.GoalCategory> categories = new LinkedList<>();
+        var categoryRows = SQLUtility.executeQuery("SELECT * from goal_categories");
 
-            for(Row curRow: categoryRows){
-                categories.add(new Objects.GoalCategory(curRow.get(0), curRow.get(1), curRow.get(2), curRow.get(3)));
-            }
-
-            LOGGER.info("cats = {}", categories);
-            setBody(exchange, categories, 200);
-        } catch(Exception e){
-            setBody(exchange, Map.of("message", "error"), 500);
+        for (Row curRow : categoryRows) {
+            categories.add(new Objects.GoalCategory(curRow.get(0), curRow.get(1), curRow.get(2), curRow.get(3)));
         }
+
+        LOGGER.info("cats = {}", categories);
+        setBody(exchange, categories, 200);
     }
 
-    void resources(HttpExchange exchange, String[] path, String method, ResourcesRequest body, String token) throws Exception{
-        if(!authService.validateToken(token)){
+    void resources(HttpExchange exchange, String[] path, String method, ResourcesRequest body, String token) throws Exception {
+        if (!authService.validateToken(token)) {
             setBody(exchange, Map.of("message", "invalid authtoken"), 418);
             return;
         }
 
-        try{
+        List<Objects.CategoryResources> resourcesList = new LinkedList<>();
 
-            List<Objects.CategoryResources> resourcesList = new LinkedList<>();
+        var resourceRows = SQLUtility.executeQuery("SELECT * from category_resources where category=?", body.id);
 
-            var resourceRows = SQLUtility.executeQuery("SELECT * from category_resources where category=?", body.id);
-
-            for(Row curRow: resourceRows){
-                resourcesList.add(new Objects.CategoryResources(curRow.get(0), curRow.get(1), curRow.get(2), curRow.get(3), curRow.get(4)));
-            }
-
-            setBody(exchange, resourcesList, 200);
-
-        } catch(Exception e){
-            setBody(exchange, Map.of("message", "error"), 500);
+        for (Row curRow : resourceRows) {
+            resourcesList.add(new Objects.CategoryResources(curRow.get(0), curRow.get(1), curRow.get(2), curRow.get(3), curRow.get(4)));
         }
 
+        setBody(exchange, resourcesList, 200);
     }
 
     static final class ResourcesRequest {

@@ -1,7 +1,5 @@
 package com.circlework.handlers;
 
-import com.circlework.manager.AuthService;
-import com.circlework.manager.CircleService;
 import com.circlework.DataSource;
 import com.sun.net.httpserver.HttpExchange;
 
@@ -13,38 +11,38 @@ public class Auth extends BasicHandler {
 
     @Override
     public void registerPaths() {
-        registerPath(new String[] {"login"}, "POST", LoginRequest.class, this::login);
-        registerPath(new String[] {"register"}, "POST", RegisterRequest.class, this::register);
+        registerPath(new String[]{"login"}, "POST", LoginRequest.class, this::login);
+        registerPath(new String[]{"register"}, "POST", RegisterRequest.class, this::register);
     }
 
     void login(HttpExchange exchange, String[] path, String method, LoginRequest request, String token) throws Exception {
-
-            var conn = DataSource.getConnection();
-            try(var stmt = conn.prepareStatement("SELECT circle_id WHERE username = ? AND password = ?")){
-                stmt.setString(1, request.username);
-                stmt.setString(2,request.password);
-                var query = stmt.executeQuery();
-                if(query.next()){
-                    var circleId = query.getInt(1);
-                    var uuid = UUID.randomUUID().toString();
-                    authService.addToken(uuid, circleId);
-                    setBody(exchange, new LoginResponse(uuid, circleId), 200);
-                    return;
-                }
+        try (var conn = DataSource.getConnection();
+             var stmt = conn.prepareStatement("SELECT circle_id WHERE username = ? AND password = ?")) {
+            stmt.setString(1, request.username);
+            stmt.setString(2, request.password);
+            var query = stmt.executeQuery();
+            if (query.next()) {
+                var circleId = query.getInt(1);
+                var uuid = UUID.randomUUID().toString();
+                authService.addToken(uuid, circleId);
+                setBody(exchange, new LoginResponse(uuid, circleId), 200);
+                return;
             }
-            setBody(exchange, Map.of("message", "invalid credentials"), 403);
+        }
+
+        setBody(exchange, Map.of("message", "invalid credentials"), 403);
     }
 
     void register(HttpExchange exchange, String[] path, String method, RegisterRequest request, String token) throws Exception {
-        var conn = DataSource.getConnection();
-        var circleId =request.circle_id;
+        var circleId = request.circle_id;
 
-        try(var stmt = conn.prepareStatement("INSERT into users (name, password, balance, circle_id) VALUES (?, ?, ?, ?)")){
+        try (var conn = DataSource.getConnection();
+             var stmt = conn.prepareStatement("INSERT into users (name, password, balance, circle_id) VALUES (?, ?, ?, ?)")) {
             stmt.setString(1, request.username);
             stmt.setString(2, request.password);
             stmt.setInt(3, 0);
 
-            if(circleId == -1){//if the user provides no preexisting circle
+            if (circleId == -1) {//if the user provides no preexisting circle
                 circleId = circleService.createCircle();//create a new circle for them
             }
 
@@ -55,15 +53,6 @@ public class Auth extends BasicHandler {
 
             setBody(exchange, new RegisterResponse(uuid, circleId), 200);
         }
-        catch(Exception e){
-            e.printStackTrace();
-            setBody(exchange, Map.of("message", "error creating user"), 418);
-        }
-
-
-
-
-//        setBody(exchange, new LoginResponse("token-1", 2));
     }
 
 
