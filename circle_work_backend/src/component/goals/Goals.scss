@@ -30,37 +30,4 @@ p.error {
             }
         }
     }
-
-    .feed {
-        .item {
-            transition: box-shadow 100ms ease-in 0s;
-
-            &:hover {
-                transition: box-shadow 100ms ease-out 0s;
-            }
-
-            .body {
-                .left {
-                    .title-line {
-                        display: flex;
-
-                        span:not(:last-child)::after {
-                            content: "∙";
-                            color: colors.$muted;
-                            margin: 0 10px;
-                        }
-
-                        .date {
-                            color: colors.$muted;
-                        }
-
-                        .category {
-                            color: colors.$muted;
-                            transition: color 150ms ease-in 0s;
-                        }
-                    }
-                }
-            }
-        }
-    }
 }

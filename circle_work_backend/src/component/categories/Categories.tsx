@@ -1,24 +1,20 @@
-import React, {useState, useEffect, Fragment} from 'react';
+import React, {useState, useEffect, Fragment, useContext} from 'react';
 import {GoalCategory} from "../../logic/objects";
 import {fetchApi} from "../../logic/request-helper";
-import {listCategories} from "../dashboard/Dashboard";
 import {navSideButton} from "../home/Home";
 import {Card, Col, Row} from "react-bootstrap";
 import {someBody} from "../stuff";
 import {useNavigate} from "react-router";
 import './Categories.scss'
 import {convertColor} from "../../logic/utilities";
+import CategoriesContext from "../../logic/Category";
 
 
 export const Categories = () => {
     const navigate = useNavigate()
 
-    const[categories, setCategories] = useState<GoalCategory[]>([])
+    const categories = useContext(CategoriesContext)
     const[hovering, setHovering] = useState<GoalCategory | undefined>()
-
-    useEffect(() =>{
-        listCategories().then(categories => setCategories(categories))
-    }, [])
 
     return(
         <Fragment>

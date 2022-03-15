@@ -23,10 +23,10 @@ public class Categories extends BasicHandler {
 
     void list(HttpExchange exchange, String[] path, String method, Objects.Empty body, String token) throws Exception {
         LOGGER.info("listing herre!!!!");
-        if (!authService.validateToken(token)) {
-            setBody(exchange, Map.of("message", "invalid authtoken"), 418);
-            return;
-        }
+//        if (!authService.validateToken(token)) {
+//            setBody(exchange, Map.of("message", "invalid authtoken"), 418);
+//            return;
+//        }
 
         List<Objects.GoalCategory> categories = new LinkedList<>();
         var categoryRows = SQLUtility.executeQuery("SELECT * from goal_categories");

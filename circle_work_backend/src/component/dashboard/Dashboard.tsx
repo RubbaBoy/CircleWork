@@ -1,4 +1,4 @@
-import React, {createRef, Fragment, useEffect, useState} from 'react'
+import React, {createRef, Fragment, useContext, useEffect, useState} from 'react'
 import './Dashboard.scss'
 import {Button, Col, Form, Modal, Row} from "react-bootstrap";
 import {someBody} from "../stuff";
@@ -12,35 +12,11 @@ import {CircleStats} from "./circle_stats/CircleStats";
 import {WeekView} from "./week_view/WeekView";
 import {useNavigate} from "react-router";
 import { Calendar } from 'react-date-range';
+import CategoriesContext from "../../logic/Category";
 
 interface AddGoalProps {
     show: boolean
     onHide: () => void
-}
-
-export function listCategories(onError?: (message: string | undefined) => void): Promise<GoalCategory[]> {
-    return fetchAuthed('category/list', {
-        method: 'GET'
-    }).then(async res => {
-        let json = await res.json()
-
-        if (res.status != 200) {
-            console.log('Bad request status ' + res.status)
-            console.log(json)
-            onError?.('There was an error listing categories')
-            return []
-        }
-
-        onError?.(undefined)
-
-        let categories: GoalCategory[] = json
-        console.log('categories =');
-        console.log(categories);
-
-        return categories
-
-        // setCategories(categories)
-    })
 }
 
 const AddGoalModal = (props: AddGoalProps) => {
@@ -53,12 +29,7 @@ const AddGoalModal = (props: AddGoalProps) => {
     const [name, setName] = useState<string>();
 
     const [error, setError] = useState<string | undefined>()
-    const [categories, setCategories] = useState<GoalCategory[]>([])
-
-    useEffect(() => {
-        listCategories(setError)
-            .then(categories => setCategories(categories))
-    }, [])
+    const categories = useContext(CategoriesContext)
 
     function onHide() {
         props.onHide()

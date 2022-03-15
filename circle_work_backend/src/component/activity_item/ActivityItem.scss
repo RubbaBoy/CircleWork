@@ -1,0 +1,64 @@
+@use "src/scss/colors" as colors;
+
+.ActivityItem {
+    transition: box-shadow 100ms ease-in 0s;
+
+    &:hover {
+        transition: box-shadow 100ms ease-out 0s;
+    }
+
+    .body {
+        display: block;
+
+        .left {
+            float: left;
+            display: inline-block;
+
+            .title-line {
+                display: flex;
+
+                span:not(:last-child)::after {
+                    content: "∙";
+                    color: colors.$muted;
+                    margin: 0 10px;
+                }
+
+                .title {
+                    font-weight: bold;
+                }
+
+                .date {
+                    color: colors.$muted;
+                }
+
+                .category {
+                    color: colors.$muted;
+                    transition: color 150ms ease-in 0s;
+                }
+            }
+
+            .body {
+                margin: 0;
+            }
+        }
+
+        .right {
+            float: right;
+            margin-left: auto;
+            display: inline-block;
+
+            .approve {
+                border-radius: 100%;
+                width: 24px;
+                height: 24px;
+                cursor: pointer;
+
+                transition: fill 100ms ease-in 0s;
+
+                &:hover {
+                    fill: colors.$approve;
+                }
+            }
+        }
+    }
+}

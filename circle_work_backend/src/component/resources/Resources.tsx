@@ -1,19 +1,20 @@
-import React, {Fragment, useEffect, useState} from 'react'
+import React, {Fragment, useContext, useEffect, useState} from 'react'
 import './Resources.scss'
 import {Card, Col, Row} from "react-bootstrap";
 import {someBody} from "../stuff";
 import {navSideButton} from "../home/Home";
 import {CategoryResources, GoalCategory} from "../../logic/objects";
-import {listCategories} from "../dashboard/Dashboard";
 import {useParams} from "react-router";
 import {fetchApi, fetchAuthed} from "../../logic/request-helper";
 import {convertColor} from "../../logic/utilities";
+import CategoriesContext from "../../logic/Category";
 
 export const Resources = () => {
     const {id} = useParams<'id'>();
     const [error, setError] = useState<string | undefined>()
     const [category, setCategory] = useState<GoalCategory | undefined>()
     const [resources, setResources] = useState<CategoryResources[]>([])
+    const categories = useContext(CategoriesContext)
 
     // useEffect(() => {
     //     let bruh: CategoryResources[] = []
@@ -54,26 +55,25 @@ export const Resources = () => {
     }
 
     useEffect(() => {
-        listCategories().then(categories => setCategory(categories.find(cat => `${cat.id}` == id)))
-            .then(_ => fetchAuthed(`category/resources?id=${id}`).then(async res => {
-                let json = await res.json()
+        setCategory(categories.find(cat => `${cat.id}` == id))
+        fetchAuthed(`category/resources?id=${id}`).then(async res => {
+            let json = await res.json()
 
-                if (res.status != 200) {
-                    console.log('Bad request status ' + res.status)
-                    console.log(json)
-                    setError('There was an error getting the category')
-                    return []
-                }
+            if (res.status != 200) {
+                console.log('Bad request status ' + res.status)
+                console.log(json)
+                setError('There was an error getting the category')
+                return []
+            }
 
-                setError(undefined)
+            setError(undefined)
 
-                let foo: CategoryResources[] = json
-                console.log('Resources:');
-                console.log(foo);
+            let foo: CategoryResources[] = json
+            console.log('Resources:');
+            console.log(foo);
 
-                setResources(foo)
-            }))
-                // .then(categories => setCategories(categories))
+            setResources(foo)
+        })
     }, [])
 
     function displayResource(resource: CategoryResources) {

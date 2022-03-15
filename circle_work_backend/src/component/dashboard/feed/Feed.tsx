@@ -4,8 +4,11 @@ import {Goal} from "../../../logic/objects";
 import {Card, Row} from "react-bootstrap";
 import {fetchAuthed} from "../../../logic/request-helper";
 import {SimpleToast} from "../../toast/Toast";
+import {ActivityItem} from "../../activity_item/ActivityItem";
+import {useNavigate} from "react-router";
 
 export const Feed = () => {
+    const navigate = useNavigate()
     const [items, setItems] = useState<Goal[]>([])
     const [error, setError] = useState<string | undefined>()
     const [title, setTitle] = useState<string | undefined>()
@@ -52,27 +55,17 @@ export const Feed = () => {
         })
     }
 
+    function navigateCategory(e: React.MouseEvent<HTMLElement, MouseEvent>, id: number) {
+        navigate('/resources/' + id)
+    }
+
     function showFeed() {
         if (items.length == 0) {
             return <p className="empty-feed">It looks like the feed is empty</p>
         }
 
-        return items.map(goal => {
-            return <Card className={"item"}>
-                <Card.Body className={"body"}>
-                    <div className={"left"}>
-                        <span className="title">{goal.owner_name} completed a task!</span>
-                        <p className="body">{goal.owner_name} completed: {goal.goal_name}</p>
-                    </div>
-                    <div className={"right"}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="approve" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000" onClick={() => approve(goal)}>
-                            <path d="M0 0h24v24H0V0z" fill="none"/>
-                            <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
-                        </svg>
-                    </div>
-                </Card.Body>
-            </Card>
-        })
+        return items.map(goal =>
+            <ActivityItem goal={goal} title={`${goal.owner_name} completed: ${goal.goal_name}`} showApprove={() => true} onApprove={(e, group) => approve(group)} onClick={(e, goal, category) => navigateCategory(e, category.id)}/>)
     }
 
     return <Row className="Feed">

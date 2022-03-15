@@ -94,23 +94,13 @@ public class Goals extends BasicHandler {
         //If reached this point, this approval hasn't been made before. Register approval with approved_goals table
         //And then increment approval
 
-        //registering
-        try (var conn = DataSource.getConnection();
-             var stmt = conn.prepareStatement("INSERT INTO approved_goals (user_id, goal_id) VALUES (?, ?)")) {
-            stmt.setInt(1, userSession.id());
-            stmt.setInt(2, body.goal_id);
+        SQLUtility.executeUpdate("INSERT INTO approved_goals (user_id, goal_id) VALUES (?, ?)", userSession.id(), body.goal_id());
 
-            stmt.executeUpdate();
+        var approvedRow = SQLUtility.executeQuerySingle(
+                "UPDATE goals set approval_count = goals.approval_count + 1 WHERE id = ? RETURNING approval_count", body.goal_id);
 
-            var approvedRow = SQLUtility.executeQuerySingle(
-                    "UPDATE goals set approval_count=goals.approval_count+1 RETURNING approval_count WHERE id=?", body.goal_id);
-
-            int approvalCount = approvedRow.get(0);
-            setBody(exchange, new ApproveResponse(approvalCount), 200);
-        }
-
-        // TODO: Evan: insert value into `approved_goals` table\
-        // also check if they have approved aslrteady
+        int approvalCount = approvedRow.get(0);
+        setBody(exchange, new ApproveResponse(approvalCount), 200);
     }
 
     /*

@@ -1,19 +1,19 @@
 CREATE TABLE  IF NOT EXISTS circles(
-                         id SERIAL PRIMARY KEY NOT NULL,
-                         name VARCHAR(64),
-                         color INT DEFAULT 0,
-                         team_count INT DEFAULT 1,
-                         tasks_started INT DEFAULT 0,
-                         tasks_completed INT DEFAULT 0,
-                         raised_monthly INT DEFAULT 0,
-                         raised_total INT DEFAULT 0
+    id SERIAL PRIMARY KEY NOT NULL,
+    name VARCHAR(64),
+    color INT DEFAULT 0,
+    team_count INT DEFAULT 1,
+    tasks_started INT DEFAULT 0,
+    tasks_completed INT DEFAULT 0,
+    raised_monthly INT DEFAULT 0,
+    raised_total INT DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS  goal_categories (
-                                 id SERIAL PRIMARY KEY NOT NULL,
-                                 name VARCHAR(64),
-                                 description VARCHAR(4096),
-                                 color INT
+    id SERIAL PRIMARY KEY NOT NULL,
+    name VARCHAR(64),
+    description VARCHAR(4096),
+    color INT
 );
 
 CREATE TABLE IF NOT EXISTS  users (
